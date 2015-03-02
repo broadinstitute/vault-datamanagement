@@ -1,10 +1,10 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementFreeSpec
-import org.broadinstitute.dsde.vault.datamanagement.domain.HsqlTestDatabase
+import org.broadinstitute.dsde.vault.datamanagement.domain.TestDatabase
 import spray.http.StatusCodes._
 
-class HelloWorldServiceSpec extends DataManagementFreeSpec with HelloWorldService with HsqlTestDatabase {
+class HelloWorldServiceSpec extends DataManagementFreeSpec with HelloWorldService with TestDatabase {
 
   def actorRefFactory = system
 

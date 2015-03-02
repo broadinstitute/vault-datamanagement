@@ -72,3 +72,14 @@ java \
 After starting the server using sbt-revolver or executing the jar, open the swagger interface in your browser:
 
 [http://localhost:8081/swagger](http://localhost:8081/swagger)
+
+### Testing with postgresql
+
+An example postgres configuration file is in the test resources directory.**WARNING:** By default it activates liquibase and reinitializes the database.
+
+```bash
+sbt \
+    -Dconfig.file=src/test/resources/postgres.conf \
+    test
+```
+

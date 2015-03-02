@@ -22,6 +22,7 @@ libraryDependencies ++= {
     ,"com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
     ,"com.typesafe.slick" %% "slick" % "2.1.0"
     ,"org.hsqldb" % "hsqldb" % "2.3.2" // % "test" TODO: Using for dev assembly, at the moment
+    ,"org.postgresql" % "postgresql" % "9.4-1200-jdbc41"
     ,"org.liquibase" % "liquibase-core" % "3.3.2" % "test"
   )
 }

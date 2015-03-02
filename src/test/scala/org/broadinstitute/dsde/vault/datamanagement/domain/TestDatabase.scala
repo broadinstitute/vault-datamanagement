@@ -3,16 +3,16 @@ package org.broadinstitute.dsde.vault.datamanagement.domain
 import java.sql.{Connection, DriverManager}
 
 import liquibase.Liquibase
-import liquibase.database.jvm.HsqlConnection
+import liquibase.database.DatabaseConnection
 import liquibase.resource.{FileSystemResourceAccessor, ResourceAccessor}
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementConfig.DatabaseConfig
 
-trait HsqlTestDatabase {
-  HsqlTestDatabase.checkStarted()
+trait TestDatabase {
+  TestDatabase.checkStarted()
 }
 
 // Modified from https://tillias.wordpress.com/2012/11/10/unit-testing-and-integration-testing-using-junit-liquibase-hsqldb-hibernate-maven-and-spring-framework/
-object HsqlTestDatabase {
+object TestDatabase {
 
   private var holdingConnection: Connection = _
   private var liquibase: Liquibase = _
@@ -24,7 +24,8 @@ object HsqlTestDatabase {
   start()
 
   private def start(): Unit = {
-    setUp("test")
+    if (DatabaseConfig.liquibaseSetup)
+      setUp("test")
   }
 
   private def setUp(contexts: String) {
@@ -32,11 +33,13 @@ object HsqlTestDatabase {
     Class.forName(DatabaseConfig.jdbcDriver)
 
     holdingConnection = getConnectionImpl
-    val hsconn: HsqlConnection = new HsqlConnection(holdingConnection)
-    liquibase = new Liquibase(DatabaseConfig.liquibaseChangeLog, resourceAccessor, hsconn)
+    val connectionClass = Class.forName(DatabaseConfig.liquibaseConnection)
+    val connectionConstructor = connectionClass.getConstructor(classOf[Connection])
+    val conn: DatabaseConnection = connectionConstructor.newInstance(holdingConnection).asInstanceOf[DatabaseConnection]
+    liquibase = new Liquibase(DatabaseConfig.liquibaseChangeLog, resourceAccessor, conn)
     liquibase.dropAll()
     liquibase.update(contexts)
-    hsconn.close()
+    conn.close()
   }
 
   private def getConnectionImpl: Connection = {

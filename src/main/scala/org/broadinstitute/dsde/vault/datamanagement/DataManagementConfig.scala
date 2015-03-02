@@ -32,7 +32,9 @@ object DataManagementConfig {
   object DatabaseConfig {
     private val database = config.getConfig("database")
     lazy val slickDriver = database.getString("slick.driver")
+    lazy val liquibaseSetup = database.hasPath("liquibase")
     lazy val liquibaseChangeLog = database.getString("liquibase.changelog")
+    lazy val liquibaseConnection = getOrElse(database, "liquibase.connection", "liquibase.database.jvm.JdbcConnection")
     lazy val jdbcUrl = database.getString("jdbc.url")
     lazy val jdbcDriver = database.getString("jdbc.driver")
     lazy val jdbcUser = getOrElse(database, "jdbc.user", null)

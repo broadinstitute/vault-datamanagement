@@ -1,12 +1,12 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
-import org.broadinstitute.dsde.vault.datamanagement.domain.{HsqlTestDatabase, Attribute}
+import org.broadinstitute.dsde.vault.datamanagement.domain.{TestDatabase, Attribute}
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementFreeSpec
 import spray.httpx.SprayJsonSupport._
 import spray.httpx.unmarshalling._
 
-class HelloAttributeServiceSpec extends DataManagementFreeSpec with HelloAttributeService with HsqlTestDatabase {
+class HelloAttributeServiceSpec extends DataManagementFreeSpec with HelloAttributeService with TestDatabase {
 
   def actorRefFactory = system
 

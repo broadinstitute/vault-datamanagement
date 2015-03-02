@@ -1,9 +1,9 @@
 package org.broadinstitute.dsde.vault.datamanagement.controller
 
-import org.broadinstitute.dsde.vault.datamanagement.domain.{HsqlTestDatabase, Attribute}
+import org.broadinstitute.dsde.vault.datamanagement.domain.{TestDatabase, Attribute}
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementFreeSpec
 
-class DataManagementControllerSpec extends DataManagementFreeSpec with HsqlTestDatabase {
+class DataManagementControllerSpec extends DataManagementFreeSpec with TestDatabase {
 
   def actorRefFactory = system
 
