@@ -21,12 +21,12 @@ trait AttributeComponent {
 
   import driver.simple._
 
-  class Attributes(tag: Tag) extends Table[Attribute](tag, "ATTRIBUTE") {
-    def id = column[Option[Int]]("ID", O.PrimaryKey, O.AutoInc)
+  class Attributes(tag: Tag) extends Table[Attribute](tag, "attribute") {
+    def id = column[Option[Int]]("id", O.PrimaryKey, O.AutoInc)
 
-    def name = column[String]("NAME")
+    def name = column[String]("name")
 
-    def value = column[String]("ATTRVALUE")
+    def value = column[String]("attrvalue")
 
     override def * = (name, value, id) <>(Attribute.tupled, Attribute.unapply)
   }
