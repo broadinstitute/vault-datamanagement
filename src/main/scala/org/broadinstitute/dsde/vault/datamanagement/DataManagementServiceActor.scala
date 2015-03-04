@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.vault.datamanagement
 import akka.actor.ActorLogging
 import com.gettyimages.spray.swagger.SwaggerHttpService
 import com.wordnik.swagger.model.ApiInfo
-import org.broadinstitute.dsde.vault.datamanagement.services.{HelloAttributeService, HelloWorldService}
+import org.broadinstitute.dsde.vault.datamanagement.services._
 import spray.routing.HttpServiceActor
 
 import scala.reflect.runtime.universe._
@@ -24,9 +24,14 @@ class DataManagementServiceActor extends HttpServiceActor with ActorLogging {
     def actorRefFactory = context
   }
 
+  val unmappedBAM = new UnmappedBAMService {
+    def actorRefFactory = context
+  }
+
   // this actor runs all routes
   def receive = runRoute(
-    helloWorld.routes ~
+    unmappedBAM.routes ~
+      helloWorld.routes ~
       helloAttribute.routes ~
       swaggerService.routes ~
     get {
@@ -37,7 +42,7 @@ class DataManagementServiceActor extends HttpServiceActor with ActorLogging {
 
   val swaggerService = new SwaggerHttpService {
     // All documented API services must be added to these API types
-    override def apiTypes = Seq(typeOf[HelloWorldService], typeOf[HelloAttributeService])
+    override def apiTypes = Seq(typeOf[UnmappedBAMService], typeOf[HelloWorldService], typeOf[HelloAttributeService])
 
     override def apiVersion = DataManagementConfig.SwaggerConfig.apiVersion
     override def baseUrl = DataManagementConfig.SwaggerConfig.baseUrl
