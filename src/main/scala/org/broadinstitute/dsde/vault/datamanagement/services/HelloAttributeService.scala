@@ -21,10 +21,11 @@ trait HelloAttributeService extends HttpService {
   def createRoute = {
     put {
       path("helloattribute") {
-        entity(as[Attribute]) { attribute =>
+        entity(as[Tuple4[String,String,String,String]]) { tuple =>
           respondWithMediaType(`application/json`) {
             complete {
-              DataManagementController.createAttribute(attribute.name, attribute.value).toJson.prettyPrint
+              val entity = DataManagementController.createEntity(tuple._1, tuple._2)
+              DataManagementController.createAttribute(entity.guid, tuple._3, tuple._4).toJson.prettyPrint
             }
           }
         }

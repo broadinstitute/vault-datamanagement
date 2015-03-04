@@ -1,7 +1,9 @@
 package org.broadinstitute.dsde.vault.datamanagement.controller
 
-import org.broadinstitute.dsde.vault.datamanagement.domain.{TestDatabase, Attribute}
+import org.broadinstitute.dsde.vault.datamanagement.domain.{TestDatabase, Attribute, Entity}
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementFreeSpec
+import java.sql.Timestamp
+import java.util.UUID
 
 class DataManagementControllerSpec extends DataManagementFreeSpec with TestDatabase {
 
@@ -13,7 +15,9 @@ class DataManagementControllerSpec extends DataManagementFreeSpec with TestDatab
       val db = DataManagementController.database
       db withTransaction {
         implicit session => {
-          val attrOrig = new Attribute("testName", "testValue")
+          val entityOrig = Entity("aType", "me")
+          val entityInsert = da.insert(entityOrig)
+          val attrOrig = Attribute(entityOrig.guid, "testName", "testValue")
           val attrInsert = da.insert(attrOrig)
           val attrSelect = da.getAttribute(attrInsert.id.get)
 

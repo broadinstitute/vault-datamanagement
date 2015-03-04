@@ -15,11 +15,12 @@ class HelloAttributeServiceSpec extends DataManagementFreeSpec with HelloAttribu
       var createdId: Int = -1
 
       "PUT should store a new attribute" in {
-        Put("/helloattribute", Attribute("foo", "bar")) ~> createRoute ~> check {
+        Put("/helloattribute", ("aType", "me", "foo", "bar")) ~> createRoute ~> check {
           val attribute = responseAs[Attribute]
           attribute.name should be("foo")
           attribute.value should be("bar")
           attribute.id shouldNot be(empty)
+          attribute.entityGUID shouldNot be(empty)
           createdId = attribute.id.get
         }
       }
