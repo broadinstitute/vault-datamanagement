@@ -14,7 +14,7 @@ case class UnmappedBAM
   metadata: Metadata,
 
   @(ApiModelProperty@field)(value = "The Vault ID of this unmapped BAM", required = false)
-  id: String = null
+  id: Option[String] = None
   )
 
 @ApiModel(value = "Metadata for a BAM (mapped or aggregated)")
@@ -23,27 +23,27 @@ case class Metadata
   @(ApiModelProperty@field)(required = true)
   ownerId: String,
 
-  md5: String = null,
+  md5: Option[String] = None,
 
-  project: String = null,
+  project: Option[String] = None,
 
-  individualAlias: String = null,
+  individualAlias: Option[String] = None,
 
-  sampleAlias: String = null,
+  sampleAlias: Option[String] = None,
 
-  readGroupAlias: String = null,
+  readGroupAlias: Option[String] = None,
 
-  libraryName: String = null,
+  libraryName: Option[String] = None,
 
-  sequencingCenter: String = null,
+  sequencingCenter: Option[String] = None,
 
-  platform: String = null,
+  platform: Option[String] = None,
 
-  platformUnit: String = null,
+  platformUnit: Option[String] = None,
 
-  runDate: String = null,
+  runDate: Option[String] = None,
 
   @(ApiModelProperty@field)(value = "indicates that this object supports arbitrary key-value pairs beyond the keys listed here. This is a hack right now" +
     " because I don't know the best way to represent varargs in Swagger.")
-  additionalMetadata: String = null
+  additionalMetadata: Option[String] = None
   )
