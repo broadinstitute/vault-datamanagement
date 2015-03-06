@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
 import com.wordnik.swagger.annotations._
-import org.broadinstitute.dsde.vault.datamanagement.domain.{Metadata, UnmappedBAM}
+import org.broadinstitute.dsde.vault.datamanagement.domain.UnmappedBAM
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
 import spray.http.MediaTypes._
 import spray.json._
@@ -38,21 +38,21 @@ trait UnmappedBAMService extends HttpService {
                 "bai" -> "sample BOSS id 2",
                 "..." -> "more files"
               ),
-              Metadata(
-                "dummy ownerId",
-                "dummy md5",
-                "dummy project",
-                "dummy individualAlias",
-                "dummy sampleAlias",
-                "dummy readGroupAlias",
-                "dummy libraryName",
-                "dummy sequencingCenter",
-                "dummy platform",
-                "dummy platformUnit",
-                "dummy runDate",
-                "..."
+              Map(
+                "ownerId" -> "dummy ownerId",
+                "md5" -> "dummy md5",
+                "project" -> "dummy project",
+                "individualAlias" -> "dummy individualAlias",
+                "sampleAlias" -> "dummy sampleAlias",
+                "readGroupAlias" -> "dummy readGroupAlias",
+                "librayName" -> "dummy libraryName",
+                "sequencingCenter" -> "dummy sequencingCenter",
+                "platform" -> "dummy platform",
+                "platformUnit" -> "dummy platformUnit",
+                "runDate" -> "dummy runDate",
+                "additionalMetaData" -> "..."
               ),
-              id
+              Some(id)
             ).toJson.prettyPrint
           }
         }
@@ -82,8 +82,8 @@ trait UnmappedBAMService extends HttpService {
                 "bai" -> "boss:boss-id-2",
                 "..." -> "moreFiles"
               ),
-              Metadata("dummy owner id"),
-              "dummy vault id"
+              Map("ownerId" -> "dummy owner id"),
+              Some("dummy vault id")
             ).toJson.prettyPrint
           }
         }
