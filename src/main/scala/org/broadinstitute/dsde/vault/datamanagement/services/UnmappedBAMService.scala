@@ -2,10 +2,12 @@ package org.broadinstitute.dsde.vault.datamanagement.services
 
 import com.wordnik.swagger.annotations._
 import org.broadinstitute.dsde.vault.datamanagement.domain.UnmappedBAM
+import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
 import spray.http.MediaTypes._
 import spray.json._
 import spray.routing._
+import spray.httpx.SprayJsonSupport._
 
 @Api(value = "/ubams", description = "uBAM Service", produces = "application/json")
 trait UnmappedBAMService extends HttpService {
@@ -30,30 +32,11 @@ trait UnmappedBAMService extends HttpService {
   def describeRoute = {
     path("ubams" / Segment) { id =>
       get {
-        respondWithMediaType(`application/json`) {
-          complete {
-            UnmappedBAM(
-              Map(
-                "bam" -> "sample BOSS id 1",
-                "bai" -> "sample BOSS id 2",
-                "..." -> "more files"
-              ),
-              Map(
-                "ownerId" -> "dummy ownerId",
-                "md5" -> "dummy md5",
-                "project" -> "dummy project",
-                "individualAlias" -> "dummy individualAlias",
-                "sampleAlias" -> "dummy sampleAlias",
-                "readGroupAlias" -> "dummy readGroupAlias",
-                "librayName" -> "dummy libraryName",
-                "sequencingCenter" -> "dummy sequencingCenter",
-                "platform" -> "dummy platform",
-                "platformUnit" -> "dummy platformUnit",
-                "runDate" -> "dummy runDate",
-                "additionalMetaData" -> "..."
-              ),
-              Some(id)
-            ).toJson.prettyPrint
+        rejectEmptyResponse {
+          respondWithMediaType(`application/json`) {
+            complete {
+              DataManagementController.getUnmappedBAM(id).map(_.toJson.prettyPrint)
+            }
           }
         }
       }
@@ -68,23 +51,17 @@ trait UnmappedBAMService extends HttpService {
   ))
   @ApiResponses(Array(
     new ApiResponse(code = 200, message = "Successful"),
-    new ApiResponse(code = 400, message = "Malformed Input"),
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def ingestRoute = {
     path("ubams") {
       post {
-        respondWithMediaType(`application/json`) {
-          complete {
-            UnmappedBAM(
-              Map(
-                "bam" -> "boss:boss-id-1",
-                "bai" -> "boss:boss-id-2",
-                "..." -> "moreFiles"
-              ),
-              Map("ownerId" -> "dummy owner id"),
-              Some("dummy vault id")
-            ).toJson.prettyPrint
+        entity(as[UnmappedBAM]) { unmappedBAM =>
+          respondWithMediaType(`application/json`) {
+            complete {
+              val ownerId = unmappedBAM.metadata("ownerId")
+              DataManagementController.createUnmappedBAM(unmappedBAM, ownerId).toJson.prettyPrint
+            }
           }
         }
       }
