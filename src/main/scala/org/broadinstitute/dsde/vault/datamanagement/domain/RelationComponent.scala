@@ -15,6 +15,8 @@
  */
 package org.broadinstitute.dsde.vault.datamanagement.domain
 
+import java.util.UUID
+
 case class Relation (
     relationGUID: String,
     entity1GUID: String,
@@ -22,7 +24,7 @@ case class Relation (
 )
 
 trait RelationComponent {
-  this: DriverComponent =>
+  this: DriverComponent with EntityComponent =>
 
   import driver.simple._
 
@@ -34,11 +36,22 @@ trait RelationComponent {
     def entity2GUID = column[String]("ENTITY_GUID_2")
 
     override def * = (relationGUID,entity1GUID,entity2GUID) <>(Relation.tupled, Relation.unapply)
+
+    def relation = foreignKey("FK_ENTITY_RELATION_ENTITY", relationGUID, entities)(_.guid)
+
+    def entity1 = foreignKey("FK_ENTITY_RELATION_ENTITY_1", entity1GUID, entities)(_.guid)
+
+    def entity2 = foreignKey("FK_ENTITY_RELATION_ENTITY_2", entity2GUID, entities)(_.guid)
   }
 
   val relations = TableQuery[Relations]
 
   def getRelation(guid: String)(implicit session: Session): Relation = {
     relations.filter(_.relationGUID === guid).first
+  }
+
+  def insert(relation: Relation)(implicit session: Session): Relation = {
+    relations += relation
+    relation.copy()
   }
 }

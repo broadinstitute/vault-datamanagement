@@ -35,7 +35,7 @@ case class Attribute
   )
 
 trait AttributeComponent {
-  this: DriverComponent =>
+  this: DriverComponent with EntityComponent =>
 
   import driver.simple._
 
@@ -49,6 +49,8 @@ trait AttributeComponent {
     def value = column[String]("ATTRVALUE")
 
     override def * = (entityGUID, name, value, id) <>(Attribute.tupled, Attribute.unapply)
+
+    def entity = foreignKey("FK_ATTRIBUTE_ENTITY", entityGUID, entities)(_.guid)
   }
 
   val attributes = TableQuery[Attributes]

@@ -52,7 +52,7 @@ trait EntityComponent {
 
   def insert(entity: Entity)(implicit session: Session): Entity = {
     entities += entity
-    entity
+    entity.copy()
   }
 
   def getEntity(guid: String)(implicit session: Session): Entity = {
