@@ -40,19 +40,19 @@ trait UnmappedBAMService extends HttpService {
               ),
               Metadata(
                 "dummy ownerId",
-                "dummy md5",
-                "dummy project",
-                "dummy individualAlias",
-                "dummy sampleAlias",
-                "dummy readGroupAlias",
-                "dummy libraryName",
-                "dummy sequencingCenter",
-                "dummy platform",
-                "dummy platformUnit",
-                "dummy runDate",
-                "..."
+                Some("dummy md5"),
+                Some("dummy project"),
+                Some("dummy individualAlias"),
+                Some("dummy sampleAlias"),
+                Some("dummy readGroupAlias"),
+                Some("dummy libraryName"),
+                Some("dummy sequencingCenter"),
+                Some("dummy platform"),
+                Some("dummy platformUnit"),
+                Some("dummy runDate"),
+                Some("...")
               ),
-              id
+              Some(id)
             ).toJson.prettyPrint
           }
         }
@@ -83,7 +83,7 @@ trait UnmappedBAMService extends HttpService {
                 "..." -> "moreFiles"
               ),
               Metadata("dummy owner id"),
-              "dummy vault id"
+              Some("dummy vault id")
             ).toJson.prettyPrint
           }
         }
