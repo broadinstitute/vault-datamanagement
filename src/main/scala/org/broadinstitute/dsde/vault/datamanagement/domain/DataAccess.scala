@@ -6,6 +6,7 @@ import scala.slick.driver.JdbcProfile
 
 class DataAccess(val driver: JdbcProfile)
   extends AttributeComponent
+  with EntityComponent
   with DriverComponent {
 
   def this(driverName: String) {

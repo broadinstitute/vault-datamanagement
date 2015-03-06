@@ -4,19 +4,88 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd"
-    objectQuotingStrategy="QUOTE_ALL_OBJECTS" >
+    objectQuotingStrategy="QUOTE_ALL_OBJECTS">
 
     <changeSet id="schema_datamanagement" author="kshakir">
-
         <comment>DataManagement</comment>
 
-        <createTable tableName="attribute">
-            <column name="id" autoIncrement="true" type="int">
-                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_attribute"/>
+        <createTable tableName="ENTITY">
+            <column name="GUID" type="varchar(36)">
+                <constraints nullable="false"/>
             </column>
-            <column name="name" type="varchar(1000)"/>
-            <column name="attrvalue" type="varchar(1000)"/>
+            <column name="ENTITY_TYPE" type="varchar(40)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_DATE" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="varchar(40)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MODIFIED_DATE" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+            <column name="MODIFIED_BY" type="varchar(40)">
+                <constraints nullable="true"/>
+            </column>
         </createTable>
+
+        <addPrimaryKey tableName="ENTITY" constraintName="PK_ENTITY" columnNames="GUID"/>
+
+        <createIndex indexName="ENTITY_BY_TYPE_IDX" tableName="ENTITY" unique="true">
+            <column name="ENTITY_TYPE"/>
+            <column name="GUID"/>
+        </createIndex>
+
+        <createTable tableName="ENTITY_RELATION">
+            <column name="RELATION_ENTITY_GUID" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENTITY_GUID_1" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENTITY_GUID_2" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="ENTITY_RELATION" constraintName="PK_ENTITY_RELATION" columnNames="RELATION_ENTITY_GUID"/>
+        <addForeignKeyConstraint constraintName="FK_ENTITY_RELATION_ENTITY" baseTableName="ENTITY_RELATION" baseColumnNames="RELATION_ENTITY_GUID" referencedTableName="ENTITY" referencedColumnNames="GUID"/>
+        <addForeignKeyConstraint constraintName="FK_ENTITY_RELATION_ENTITY_1" baseTableName="ENTITY_RELATION" baseColumnNames="ENTITY_GUID_1" referencedTableName="ENTITY" referencedColumnNames="GUID"/>
+        <addForeignKeyConstraint constraintName="FK_ENTITY_RELATION_ENTITY_2" baseTableName="ENTITY_RELATION" baseColumnNames="ENTITY_GUID_2" referencedTableName="ENTITY" referencedColumnNames="GUID"/>
+
+        <createIndex indexName="ENTITY_RELATION_BY_1_IDX" tableName="ENTITY_RELATION" unique="true">
+            <column name="ENTITY_GUID_1"/>
+            <column name="ENTITY_GUID_2"/>
+            <column name="RELATION_ENTITY_GUID"/>
+        </createIndex>
+
+        <createIndex indexName="ENTITY_RELATION_BY_2_IDX" tableName="ENTITY_RELATION" unique="true">
+            <column name="ENTITY_GUID_2"/>
+            <column name="ENTITY_GUID_1"/>
+            <column name="RELATION_ENTITY_GUID"/>
+        </createIndex>
+
+        <createTable tableName="ATTRIBUTE">
+            <column name="ID" autoIncrement="true" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENTITY_GUID" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NAME" type="varchar(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ATTRVALUE" type="varchar(1000)"/>
+        </createTable>
+
+        <addPrimaryKey tableName="ATTRIBUTE" constraintName="PK_ATTRIBUTE" columnNames="ID"/>
+        <addForeignKeyConstraint constraintName="FK_ATTRIBUTE_ENTITY" baseTableName="ATTRIBUTE" baseColumnNames="ENTITY_GUID" referencedTableName="ENTITY" referencedColumnNames="GUID"/>
+
+        <createIndex indexName="ATTRIBUTE_BY_ENTITY_IDX" tableName="ATTRIBUTE" unique="false">
+            <column name="ENTITY_GUID"/>
+            <column name="NAME"/>
+        </createIndex>
 
     </changeSet>
 
