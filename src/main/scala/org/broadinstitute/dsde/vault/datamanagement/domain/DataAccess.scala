@@ -25,7 +25,7 @@ class DataAccess(val driver: JdbcProfile)
   }
 
   def addMetadata(entityGUID: String, metadata: Map[String, String])(implicit session: Session) {
-    for ((name, value) <- metadata) {
+    metadata.foreach{case (name, value) =>
       insert(Attribute(entityGUID, name, value))
     }
   }
@@ -43,7 +43,7 @@ class DataAccess(val driver: JdbcProfile)
   }
 
   def addFiles(entityGUID: String, createdBy: String, files: Map[String, String])(implicit session: Session) {
-    for ((fileType, path) <- files) {
+    files.foreach{case (fileType, path) =>
       val typeEntity = insert(Entity("fileType", createdBy))
       insert(Attribute(typeEntity.guid, "name", fileType))
       val fileEntity = insert(Entity("file", createdBy))

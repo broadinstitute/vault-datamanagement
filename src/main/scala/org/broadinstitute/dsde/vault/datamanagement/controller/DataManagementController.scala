@@ -19,7 +19,7 @@ object DataManagementController {
          val entity = dataAccess.insert(Entity("unmappedBAM", createdBy))
          dataAccess.addFiles(entity.guid, createdBy, unmappedBAM.files)
          dataAccess.addMetadata(entity.guid, unmappedBAM.metadata)
-         unmappedBAM.copy(id = Some(entity.guid))
+         unmappedBAM.copy(id = Option(entity.guid))
      }
   }
 
@@ -30,7 +30,7 @@ object DataManagementController {
           entity => {
             val files = dataAccess.getFiles(entity.guid)
             val metadata = dataAccess.getMetadata(entity.guid)
-            UnmappedBAM(files, metadata, Some(entity.guid))
+            UnmappedBAM(files, metadata, Option(entity.guid))
           }
         )
     }
