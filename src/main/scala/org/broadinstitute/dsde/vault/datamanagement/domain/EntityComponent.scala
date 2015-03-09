@@ -52,10 +52,10 @@ trait EntityComponent {
 
   def insert(entity: Entity)(implicit session: Session): Entity = {
     entities += entity
-    entity
+    entity.copy()
   }
 
-  def getEntity(guid: String)(implicit session: Session): Entity = {
-    entities.filter(_.guid === guid).first
+  def getEntity(guid: String)(implicit session: Session): Option[Entity] = {
+    entities.filter(_.guid === guid).firstOption
   }
 }
