@@ -4,8 +4,13 @@ import com.typesafe.config.{Config, ConfigFactory}
 
 object DataManagementConfig {
   private val config = ConfigFactory.load()
+
   private def getOrElse(config: Config, path: String, default: String): String = {
     if (config.hasPath(path)) config.getString(path) else default
+  }
+
+  private def getOption(config: Config, path: String, default: Option[Int] = None): Option[Int] = {
+    if (config.hasPath(path)) Option(config.getInt(path)) else default
   }
 
   object HttpConfig {
@@ -13,6 +18,7 @@ object DataManagementConfig {
     lazy val interface = httpConfig.getString("interface")
     lazy val port = httpConfig.getInt("port")
   }
+
   //Config Settings
 
   object SwaggerConfig {
@@ -39,6 +45,7 @@ object DataManagementConfig {
     lazy val jdbcDriver = database.getString("jdbc.driver")
     lazy val jdbcUser = getOrElse(database, "jdbc.user", null)
     lazy val jdbcPassword = getOrElse(database, "jdbc.password", null)
+    lazy val c3p0MaxStatementsOption = getOption(database, "c3p0.maxStatements")
   }
 
 }

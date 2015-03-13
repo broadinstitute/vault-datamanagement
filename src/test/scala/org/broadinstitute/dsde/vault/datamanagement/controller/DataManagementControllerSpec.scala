@@ -1,11 +1,8 @@
 package org.broadinstitute.dsde.vault.datamanagement.controller
 
-import org.broadinstitute.dsde.vault.datamanagement.domain._
-import org.broadinstitute.dsde.vault.datamanagement.DataManagementFreeSpec
-import java.sql.Timestamp
-import java.util.UUID
+import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
 
-class DataManagementControllerSpec extends DataManagementFreeSpec with TestDatabase {
+class DataManagementControllerSpec extends DataManagementDatabaseFreeSpec {
 
   def actorRefFactory = system
 
@@ -15,25 +12,18 @@ class DataManagementControllerSpec extends DataManagementFreeSpec with TestDatab
       val db = DataManagementController.database
       db withTransaction {
         implicit session => {
-          // TODO: Validate that the orig and insert are java .equals and not java ==
-          val entityOrig = Entity("aType", "me")
-          val entityInsert = da.insert(entityOrig)
-          val parentOrig = Entity("bType", "parent")
-          val parentInsert = da.insert(parentOrig)
-          val parentOfEntityOrig = Entity("cType", "parentOfEntity")
-          val parentOfEntityInsert = da.insert(parentOfEntityOrig)
-          val relationOrig = Relation(
-            parentOfEntityOrig.guid,
-            parentInsert.guid,
-            entityInsert.guid)
-          val relationInsert = da.insert(relationOrig)
-          val attrOrig = Attribute(entityInsert.guid, "testName", "testValue")
-          val attrInsert = da.insert(attrOrig)
+          val entityInsert = da.insertEntity("aType", "me")
+          val parentInsert = da.insertEntity("bType", "parent")
+          val parentOfEntityInsert = da.insertEntity("cType", "parentOfEntity")
+          val relationInsert = da.insertRelation(
+            parentOfEntityInsert.guid.get,
+            parentInsert.guid.get,
+            entityInsert.guid.get)
+          val attrInsert = da.insertAttribute(entityInsert.guid.get, "testName", "testValue")
           val attrSelect = da.getAttribute(attrInsert.id.get)
 
-          attrOrig.id should be (empty)
-          attrInsert.id shouldNot be (empty)
-          attrSelect.id should be (attrInsert.id)
+          attrInsert.id shouldNot be(empty)
+          attrSelect.id should be(attrInsert.id)
         }
       }
     }

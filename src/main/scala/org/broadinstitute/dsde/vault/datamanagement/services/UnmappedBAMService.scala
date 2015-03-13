@@ -1,13 +1,13 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
 import com.wordnik.swagger.annotations._
-import org.broadinstitute.dsde.vault.datamanagement.domain.UnmappedBAM
 import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
+import org.broadinstitute.dsde.vault.datamanagement.model.UnmappedBAM
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
 import spray.http.MediaTypes._
+import spray.httpx.SprayJsonSupport._
 import spray.json._
 import spray.routing._
-import spray.httpx.SprayJsonSupport._
 
 @Api(value = "/ubams", description = "uBAM Service", produces = "application/json")
 trait UnmappedBAMService extends HttpService {

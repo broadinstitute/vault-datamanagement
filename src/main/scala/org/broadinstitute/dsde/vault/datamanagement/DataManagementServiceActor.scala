@@ -20,10 +20,6 @@ class DataManagementServiceActor extends HttpServiceActor with ActorLogging {
     def actorRefFactory = context
   }
 
-  val helloAttribute = new HelloAttributeService {
-    def actorRefFactory = context
-  }
-
   val unmappedBAM = new UnmappedBAMService {
     def actorRefFactory = context
   }
@@ -32,22 +28,27 @@ class DataManagementServiceActor extends HttpServiceActor with ActorLogging {
   def receive = runRoute(
     unmappedBAM.routes ~
       helloWorld.routes ~
-      helloAttribute.routes ~
       swaggerService.routes ~
-    get {
-      pathPrefix("swagger") {
-        pathEndOrSingleSlash { getFromResource("swagger/index.html") }
-      } ~ getFromResourceDirectory("swagger")
-    })
+      get {
+        pathPrefix("swagger") {
+          pathEndOrSingleSlash {
+            getFromResource("swagger/index.html")
+          }
+        } ~ getFromResourceDirectory("swagger")
+      })
 
   val swaggerService = new SwaggerHttpService {
     // All documented API services must be added to these API types
-    override def apiTypes = Seq(typeOf[UnmappedBAMService], typeOf[HelloWorldService], typeOf[HelloAttributeService])
+    override def apiTypes = Seq(typeOf[UnmappedBAMService], typeOf[HelloWorldService])
 
     override def apiVersion = DataManagementConfig.SwaggerConfig.apiVersion
+
     override def baseUrl = DataManagementConfig.SwaggerConfig.baseUrl
+
     override def docsPath = DataManagementConfig.SwaggerConfig.apiDocs
+
     override def actorRefFactory = context
+
     override def apiInfo = Some(
       new ApiInfo(
         DataManagementConfig.SwaggerConfig.info,

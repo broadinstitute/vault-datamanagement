@@ -1,4 +1,4 @@
-package org.broadinstitute.dsde.vault.datamanagement.domain
+package org.broadinstitute.dsde.vault.datamanagement
 
 import java.sql.{Connection, DriverManager}
 

@@ -1,6 +1,7 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
 import org.broadinstitute.dsde.vault.datamanagement.domain._
+import org.broadinstitute.dsde.vault.datamanagement.model.UnmappedBAM
 import spray.json.DefaultJsonProtocol
 
 object JsonImplicits extends DefaultJsonProtocol {
