@@ -132,4 +132,21 @@ class DataAccess(val driver: JdbcProfile)
     //   3) The entity2 is the id of the unmapped BAM specified by the user
     insertRelation(typeEntity.guid.get, entityGUID, inputGuid)
   }
+
+  // TODO: Need liquibase index for this search by attribute name,value.
+  private val entityByTypeAttribute = Compiled(
+    (entityType: Column[String],
+     attributeName: Column[String],
+     attributeValue: Column[String]) => for {
+      entity <- entities
+      if entity.entityType === entityType
+      attribute <- attributes
+      if entity.guid === attribute.entityGUID &&
+        attribute.name === attributeName &&
+        attribute.value === attributeValue
+    } yield entity)
+
+  def lookupEntityByTypeAttribute(entityType: String, attributeName: String, attributeValue: String)(implicit session: Session) = {
+    entityByTypeAttribute((entityType, attributeName, attributeValue)).firstOption
+  }
 }

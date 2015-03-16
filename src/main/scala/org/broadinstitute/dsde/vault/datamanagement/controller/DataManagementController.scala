@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.vault.datamanagement.controller
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementConfig.DatabaseConfig
 import org.broadinstitute.dsde.vault.datamanagement.domain._
-import org.broadinstitute.dsde.vault.datamanagement.model.{Analysis, UnmappedBAM}
+import org.broadinstitute.dsde.vault.datamanagement.model._
 
 import scala.slick.jdbc.JdbcBackend._
 
@@ -68,6 +68,22 @@ object DataManagementController {
             Analysis(input, metadata, Option(files), entity.guid)
           }
         )
+    }
+  }
+
+  // ==================== lookup service ====================
+
+  def lookupEntityByEndpointAttribute
+  (endpoint: String, attributeName: String, attributeValue: String): Option[EntitySearchResult] = {
+    database withTransaction {
+      implicit session =>
+        EntityType.TYPES.find(_.endpoint == endpoint) match {
+          case Some(entityType) =>
+            dataAccess
+              .lookupEntityByTypeAttribute(entityType.databaseKey, attributeName, attributeValue)
+              .map(entity => EntitySearchResult(entity.guid.get, entityType.endpoint))
+          case None => None
+        }
     }
   }
 
