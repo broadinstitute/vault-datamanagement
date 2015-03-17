@@ -38,12 +38,11 @@ trait EntityComponent {
 
   val entitiesCompiled = Compiled(entities)
 
-  // Using Slick 1.0 syntax because it's shorter
-  private val entitiesByGUID = for {
-    guid <- Parameters[String]
-    entity <- entities
-    if entity.guid === guid
-  } yield entity
+  private val entitiesByGUID = Compiled(
+    (guid: Column[String]) => for {
+      entity <- entities
+      if entity.guid === guid
+    } yield entity)
 
   def insertEntity(entityType: String, createdBy: String)(implicit session: Session): Entity = {
     val entity = Entity(entityType, createdBy,

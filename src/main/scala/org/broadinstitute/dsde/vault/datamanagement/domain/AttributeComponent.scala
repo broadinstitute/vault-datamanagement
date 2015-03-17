@@ -35,11 +35,11 @@ trait AttributeComponent {
     case (a, id) => a.copy(id = Some(id))
   }
 
-  private val attributeByID = for {
-    id <- Parameters[Int]
-    attribute <- attributes
-    if attribute.id === id
-  } yield attribute
+  private val attributeByID = Compiled(
+    (id: Column[Int]) => for {
+      attribute <- attributes
+      if attribute.id === id
+    } yield attribute)
 
   def insertAttribute(entityGUID: String, name: String, value: String)(implicit session: Session): Attribute = {
     attributesAutoInc.insert(Attribute(entityGUID, name, value))

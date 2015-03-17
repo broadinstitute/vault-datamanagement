@@ -1,6 +1,7 @@
 package org.broadinstitute.dsde.vault.datamanagement.domain
 
 import org.broadinstitute.dsde.vault.datamanagement.util.Reflection
+import org.broadinstitute.dsde.vault.datamanagement.domain.RelationKeyValue._
 
 import scala.slick.driver.JdbcProfile
 
@@ -16,12 +17,11 @@ class DataAccess(val driver: JdbcProfile)
     this(Reflection.getObject[JdbcProfile](driverName))
   }
 
-  // Using Slick 1.0 syntax because it's shorter
-  private val metadataForEntity = for {
-    entityGUID <- Parameters[String]
-    attribute <- attributes
-    if attribute.entityGUID === entityGUID
-  } yield (attribute.name, attribute.value)
+  private val metadataForEntity = Compiled(
+    (entityGUID: Column[String]) => for {
+      attribute <- attributes
+      if attribute.entityGUID === entityGUID
+    } yield (attribute.name, attribute.value))
 
   def getMetadata(entityGUID: String)(implicit session: Session): Map[String, String] = {
     metadataForEntity(entityGUID).toMap
@@ -37,38 +37,37 @@ class DataAccess(val driver: JdbcProfile)
     insertAttribute(entityGUID, name, value)
   }
 
-  // Using Slick 1.0 syntax because it's shorter
-  private val filesForEntity = for {
-  // Create a parameter for the entity GUID
-    entityGUID <- Parameters[String]
+  private val filesForEntity = Compiled(
+    // Create a parameter for the entity GUID
+    (entityGUID: Column[String]) => for {
 
     // Retrieve the relation where our "entityGUID" parameter is the entity1GUID
-    relation <- relations
-    if relation.entity1GUID === entityGUID
+      relation <- relations
+      if relation.entity1GUID === entityGUID
 
-    // Retrieve the attribute where:
-    //   1) the Relation.relationGUID matches this attribute GUID
-    //   2) this attribute name is "name"
-    nameAttribute <- attributes
-    if relation.relationGUID === nameAttribute.entityGUID &&
-      nameAttribute.name === "name"
+      // Using the foreign key, filter for the Relation.relation.entityType === FILE_TYPE.entityType
+      typeEntity <- relation.relation
+      if typeEntity.entityType === FILE_TYPE.entityType
 
-    // Retrieve the attribute where:
-    //   1) the Relation.entity2GUID matches this attribute GUID
-    //   2) this attribute name is "path"
-    pathAttribute <- attributes
-    if relation.entity2GUID === pathAttribute.entityGUID &&
-      pathAttribute.name === "path"
+      // Retrieve the attribute where:
+      //   1) the Relation.relationGUID matches this attribute GUID
+      //   2) this attribute name is FILE_TYPE.attributeName
+      typeAttribute <- attributes
+      if relation.relationGUID === typeAttribute.entityGUID &&
+        typeAttribute.name === FILE_TYPE.attributeName
 
-    // Using the foreign key, filter for the Relation.relation.entityType === "fileType"
-    typeEntity <- relation.relation
-    if typeEntity.entityType === "fileType"
+      // Using the foreign key, filter for the Relation.entity2.entityType === FILE_PATH.entityType
+      pathEntity <- relation.entity2
+      if pathEntity.entityType === FILE_PATH.entityType
 
-    // Using the foreign key, filter for the Relation.entity2.entityType === "file"
-    fileEntity <- relation.entity2
-    if fileEntity.entityType === "file"
+      // Retrieve the attribute where:
+      //   1) the Relation.entity2GUID matches this attribute GUID
+      //   2) this attribute name is FILE_PATH.attributeName
+      pathAttribute <- attributes
+      if relation.entity2GUID === pathAttribute.entityGUID &&
+        pathAttribute.name === FILE_PATH.attributeName
 
-  } yield (nameAttribute.value, pathAttribute.value)
+    } yield (typeAttribute.value, pathAttribute.value))
 
   def getFiles(entityGUID: String)(implicit session: Session): Map[String, String] = {
     filesForEntity(entityGUID).toMap
@@ -82,17 +81,17 @@ class DataAccess(val driver: JdbcProfile)
 
   def addFile(entityGUID: String, createdBy: String, fileType: String, filePath: String)(implicit session: Session) {
     // Create an entity for the type, with an attribute name that stores said file type
-    val typeEntity = insertEntity("fileType", createdBy)
-    insertAttribute(typeEntity.guid.get, "name", fileType)
+    val typeEntity = insertEntity(FILE_TYPE.entityType, createdBy)
+    insertAttribute(typeEntity.guid.get, FILE_TYPE.attributeName, fileType)
 
     // Create an entity for the file path, with the path stored in an attribute
-    val fileEntity = insertEntity("file", createdBy)
-    insertAttribute(fileEntity.guid.get, "path", filePath)
+    val pathEntity = insertEntity(FILE_PATH.entityType, createdBy)
+    insertAttribute(pathEntity.guid.get, FILE_PATH.attributeName, filePath)
 
     // Create a relation row with:
     //   2) The entity1 is the passed in original entity
     //   1) The relation is the file type of original entity
     //   3) The entity2 is the file path of the original entity
-    insertRelation(typeEntity.guid.get, entityGUID, fileEntity.guid.get)
+    insertRelation(typeEntity.guid.get, entityGUID, pathEntity.guid.get)
   }
 }
