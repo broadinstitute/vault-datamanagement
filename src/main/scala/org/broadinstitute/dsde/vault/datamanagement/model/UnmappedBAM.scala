@@ -1,4 +1,4 @@
-package org.broadinstitute.dsde.vault.datamanagement.domain
+package org.broadinstitute.dsde.vault.datamanagement.model
 
 import com.wordnik.swagger.annotations.{ApiModel, ApiModelProperty}
 

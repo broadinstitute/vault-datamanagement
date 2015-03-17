@@ -1,0 +1,3 @@
+package org.broadinstitute.dsde.vault.datamanagement
+
+abstract class DataManagementDatabaseFreeSpec extends DataManagementFreeSpec with TestDatabase

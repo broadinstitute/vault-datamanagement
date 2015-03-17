@@ -1,13 +1,12 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
-import org.broadinstitute.dsde.vault.datamanagement.domain.{TestDatabase, UnmappedBAM}
+import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
+import org.broadinstitute.dsde.vault.datamanagement.model.UnmappedBAM
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
-import org.broadinstitute.dsde.vault.datamanagement.DataManagementFreeSpec
 import spray.http.StatusCodes._
 import spray.httpx.SprayJsonSupport._
-import spray.httpx.unmarshalling._
 
-class UnmappedBAMServiceSpec extends DataManagementFreeSpec with UnmappedBAMService with TestDatabase {
+class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with UnmappedBAMService {
 
   def actorRefFactory = system
 
