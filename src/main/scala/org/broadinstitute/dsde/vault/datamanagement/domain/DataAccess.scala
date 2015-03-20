@@ -94,4 +94,42 @@ class DataAccess(val driver: JdbcProfile)
     //   3) The entity2 is the file path of the original entity
     insertRelation(typeEntity.guid.get, entityGUID, pathEntity.guid.get)
   }
+
+  private val inputsForEntity = Compiled(
+    // Create a parameter for the entity GUID
+    (entityGUID: Column[String]) => for {
+
+    // Retrieve the relation where our "entityGUID" parameter is the entity1GUID
+      relation <- relations
+      if relation.entity1GUID === entityGUID
+
+      // Using the foreign key, filter for the Relation.relation.entityType === INPUT_TYPE.entityType
+      typeEntity <- relation.relation
+      if typeEntity.entityType === INPUT_TYPE.entityType
+
+    } yield relation.entity2GUID)
+
+  def getInputs(entityGUID: String)(implicit session: Session): List[String] = {
+    inputsForEntity(entityGUID).list
+  }
+
+  def addInputs(entityGUID: String, createdBy: String, inputs: List[String])(implicit session: Session) {
+    def addInputGuid(inputGuid: String) =
+      addInput(entityGUID, createdBy, inputGuid)
+    inputs.foreach(addInputGuid)
+  }
+
+  def addInput(entityGUID: String, createdBy: String, inputGuid: String)(implicit session: Session) {
+    // Create an entity for the input
+    val typeEntity = insertEntity(INPUT_TYPE.entityType, createdBy)
+
+    // We count on the database to handle foreign key constraint errors for us. These will throw an exception
+    // which will bubble up and result in the wrapping request returning an error.
+
+    // Create a relation row with:
+    //   2) The entity1 is the passed in original entity
+    //   1) The relation is the input type we just created
+    //   3) The entity2 is the id of the unmapped BAM specified by the user
+    insertRelation(typeEntity.guid.get, entityGUID, inputGuid)
+  }
 }
