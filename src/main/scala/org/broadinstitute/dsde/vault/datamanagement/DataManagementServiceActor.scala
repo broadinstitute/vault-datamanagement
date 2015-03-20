@@ -4,6 +4,7 @@ import akka.actor.ActorLogging
 import com.gettyimages.spray.swagger.SwaggerHttpService
 import com.wordnik.swagger.model.ApiInfo
 import org.broadinstitute.dsde.vault.datamanagement.services._
+import spray.http.StatusCodes._
 import spray.routing.HttpServiceActor
 
 import scala.reflect.runtime.universe._
@@ -34,13 +35,8 @@ class DataManagementServiceActor extends HttpServiceActor with ActorLogging {
       analysis.routes ~
       helloWorld.routes ~
       swaggerService.routes ~
-      get {
-        pathPrefix("swagger") {
-          pathEndOrSingleSlash {
-            getFromResource("swagger/index.html")
-          }
-        } ~ getFromResourceDirectory("swagger")
-      })
+      swaggerUiService
+  )
 
   val swaggerService = new SwaggerHttpService {
     // All documented API services must be added to these API types
@@ -63,6 +59,24 @@ class DataManagementServiceActor extends HttpServiceActor with ActorLogging {
         DataManagementConfig.SwaggerConfig.license,
         DataManagementConfig.SwaggerConfig.licenseUrl)
     )
+  }
+
+  val swaggerUiService = {
+    get {
+      pathPrefix("swagger") {
+        // if the user just hits "swagger", redirect to the index page with our api docs specified on the url
+        pathEndOrSingleSlash { p =>
+          // dynamically calculate the context path, which may be different in various environments
+          val path = p.request.uri.path.toString
+          val dynamicContext = path.substring(0, path.indexOf("swagger"))
+          p.redirect("/swagger/index.html?url=" + dynamicContext + "api-docs", TemporaryRedirect)
+        } ~
+          pathPrefix("swagger/index.html") {
+            getFromResource("META-INF/resources/webjars/swagger-ui/2.1.8-M1/index.html")
+          } ~
+          getFromResourceDirectory("META-INF/resources/webjars/swagger-ui/2.1.8-M1")
+      }
+    }
   }
 
 }
