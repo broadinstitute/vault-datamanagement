@@ -26,9 +26,30 @@ Ensure the following prerequisites are installed. On a Mac this may easily be do
     - When running via sbt, start sbt with the config file ```sbt -Dconfig.file=src/main/resources/application.conf``` and the run command will pick up your local configuration.
     - When running via sbt/revolver (i.e. using the re-start command), you can just run in sbt normally - the config is preset for you in build.sbt. You still must create the test database first.
 
+### Testing with in memory hsqldb
+
+Run a basic test of all routes against hsqldb using the normal `test`. The tests will create an instance of the database in memory, and initialize it using liquibase.
+
+```bash
+sbt \
+    test
+```
+
+### Testing with postgresql
+
+An example postgres configuration file is in the test resources directory. Update an instance of the postgres configuration file with the database info for your postgres installation. **WARNING:** By default it activates liquibase and reinitializes the database.
+
+```bash
+sbt \
+    -Dconfig.file=src/test/resources/postgres.conf \
+    test
+```
+
 ## Building and Running
 
-### Creating test database
+### Creating or updating the temporary database
+
+Only the tests create a database from scratch. When running the production code, one must manually create or update the database using liquibase.
 
 Make sure the hsqldb driver has been resolved by sbt.
 ```bash
@@ -38,7 +59,7 @@ sbt update
 Run liquibase to create a temporary database:
 ```bash
 liquibase \
-    --classpath=${HOME}/.m2/repository/org/hsqldb/hsqldb/2.3.2/hsqldb-2.3.2.jar \
+    --classpath=${HOME}/.ivy2/cache/org.hsqldb/hsqldb/jars/hsqldb-2.3.2.jar \
     --changeLogFile=src/main/migrations/changelog.xml \
     --driver=org.hsqldb.jdbcDriver \
     --url="jdbc:hsqldb:file:target/hsqldb/temp.db" \
@@ -47,7 +68,7 @@ liquibase \
 
 ### Debugging
 
-For debugging, use sbt-revolver within the sbt console:
+For debugging, after manually creating or updating the temporary database using the command above, use sbt-revolver within the sbt console:
 ```bash
 sbt
 > re-start
@@ -60,7 +81,7 @@ Run the assembly task to build a fat jar:
 sbt assembly
 ```
 
-Execute the jar with the path to the jar and path for the config file:
+After manually creating or updating the temporary database using the command above, execute the jar with the path to the jar and path for the config file:
 ```bash
 java \
     -Dconfig.file=src/main/resources/application.conf \
@@ -72,14 +93,3 @@ java \
 After starting the server using sbt-revolver or executing the jar, open the swagger interface in your browser:
 
 [http://localhost:8081/swagger](http://localhost:8081/swagger)
-
-### Testing with postgresql
-
-An example postgres configuration file is in the test resources directory.**WARNING:** By default it activates liquibase and reinitializes the database.
-
-```bash
-sbt \
-    -Dconfig.file=src/test/resources/postgres.conf \
-    test
-```
-

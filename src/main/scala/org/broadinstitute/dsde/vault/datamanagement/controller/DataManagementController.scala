@@ -48,11 +48,11 @@ object DataManagementController {
     database withTransaction {
       implicit session =>
         val entity = dataAccess.insertEntity(EntityType.ANALYSIS.databaseKey, createdBy)
-        dataAccess.addInputs(entity.guid.get, createdBy, analysis.input)
+        dataAccess.addInputs(entity.guid.get, createdBy, analysis.input.get)
         // in the main Apollo use case, files will always be empty, so the following line is a no-op.
         // leaving it here in case the use case changes in the future.
-        analysis.files map {files => dataAccess.addFiles(entity.guid.get, createdBy, files)}
-        dataAccess.addMetadata(entity.guid.get, analysis.metadata)
+        analysis.files map { files => dataAccess.addFiles(entity.guid.get, createdBy, files)}
+        dataAccess.addMetadata(entity.guid.get, analysis.metadata.get)
         analysis.copy(id = entity.guid)
     }
   }
@@ -60,14 +60,36 @@ object DataManagementController {
   def getAnalysis(id: String): Option[Analysis] = {
     database withTransaction {
       implicit session =>
-        dataAccess.getEntity(id).map(
-          entity => {
-            val input = dataAccess.getInputs(entity.guid.get)
-            val files = dataAccess.getFiles(entity.guid.get)
-            val metadata = dataAccess.getMetadata(entity.guid.get)
-            Analysis(input, metadata, Option(files), entity.guid)
-          }
-        )
+        getAnalysisWithSession(id)
+    }
+  }
+
+  def completeAnalysis(id: String, files: Map[String, String], updatedBy: String): Option[Analysis] = {
+    database withTransaction {
+      implicit session =>
+        dataAccess.updateEntity(id, updatedBy)
+        dataAccess.addFiles(id, updatedBy, files)
+        getAnalysisWithSession(id)
+    }
+  }
+
+  // ==================== common utility methods ====================
+  private def getAnalysisWithSession(id: String)(implicit session: Session): Option[Analysis] = {
+    dataAccess.getEntity(id).map(
+      entity => {
+        val input = dataAccess.getInputs(entity.guid.get)
+        val files = dataAccess.getFiles(entity.guid.get)
+        val metadata = dataAccess.getMetadata(entity.guid.get)
+        Analysis(Option(input), Option(metadata), Option(files), entity.guid)
+      }
+    )
+  }
+
+  // ==================== test methods ====================
+  def getEntity(id: String) = {
+    database withTransaction {
+      implicit session =>
+        dataAccess.getEntity(id)
     }
   }
 

@@ -44,12 +44,22 @@ trait EntityComponent {
       if entity.guid === guid
     } yield entity)
 
+  private val entitiesByGUIDModified = Compiled(
+    (guid: Column[String]) => for {
+      entity <- entities
+      if entity.guid === guid
+    } yield (entity.modifiedBy, entity.modifiedDate))
+
   def insertEntity(entityType: String, createdBy: String)(implicit session: Session): Entity = {
     val entity = Entity(entityType, createdBy,
       Option(new Timestamp(System.currentTimeMillis())),
       guid = Option(UUID.randomUUID.toString))
     entitiesCompiled += entity
     entity
+  }
+
+  def updateEntity(guid: String, updatedBy: String)(implicit session: Session) {
+    entitiesByGUIDModified(guid).update(updatedBy, new Timestamp(System.currentTimeMillis()))
   }
 
   def getEntity(guid: String)(implicit session: Session): Option[Entity] = {
