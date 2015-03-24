@@ -8,10 +8,10 @@ import scala.annotation.meta.field
 case class Analysis
 (
   @(ApiModelProperty@field)(value = "The Vault IDs of the unmapped BAMs used as input for this Analysis.", required = true)
-  input: List[String],
+  input: Option[Seq[String]] = None,
 
   @(ApiModelProperty@field)(value = "The metadata key-value pairs associated with this Analysis.", required = true)
-  metadata: Map[String, String],
+  metadata: Option[Map[String, String]] = None,
 
   @(ApiModelProperty@field)(value = "The output files associated with this Analysis, each with a unique user-supplied string key.", required = false)
   files: Option[Map[String, String]] = None,

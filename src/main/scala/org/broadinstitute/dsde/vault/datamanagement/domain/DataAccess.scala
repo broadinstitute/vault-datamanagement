@@ -109,11 +109,11 @@ class DataAccess(val driver: JdbcProfile)
 
     } yield relation.entity2GUID)
 
-  def getInputs(entityGUID: String)(implicit session: Session): List[String] = {
+  def getInputs(entityGUID: String)(implicit session: Session): Seq[String] = {
     inputsForEntity(entityGUID).list
   }
 
-  def addInputs(entityGUID: String, createdBy: String, inputs: List[String])(implicit session: Session) {
+  def addInputs(entityGUID: String, createdBy: String, inputs: Seq[String])(implicit session: Session) {
     def addInputGuid(inputGuid: String) =
       addInput(entityGUID, createdBy, inputGuid)
     inputs.foreach(addInputGuid)
