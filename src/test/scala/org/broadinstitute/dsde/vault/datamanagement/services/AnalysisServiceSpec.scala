@@ -88,11 +88,11 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
           "adapter_metrics" -> "gcs://path/to/adapter_metrics",
           "alignment_summary_metrics" -> "gcs://path/to/alignment_summary_metrics"
         ))
-        val completedMedatada = Option(Map(
+        val completedMetadata = Option(Map(
           "ownerId" -> "userUpdate"
         ))
 
-        val analysisComplete = analysisCreated.copy(metadata = completedMedatada, files = completedFiles)
+        val analysisComplete = analysisCreated.copy(metadata = completedMetadata, files = completedFiles)
 
         Post(pathBase + "/" + analysisComplete.id.get + "/outputs", analysisComplete) ~> completeRoute ~> check {
           val analysis = responseAs[Analysis]

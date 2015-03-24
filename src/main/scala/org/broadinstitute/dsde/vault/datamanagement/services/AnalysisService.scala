@@ -71,7 +71,7 @@ trait AnalysisService extends HttpService {
 
   @ApiOperation(value = "Complete Analysis", nickname = "analysis_complete", httpMethod = "POST",
     produces = "application/json", consumes = "application/json", response = classOf[Analysis],
-    notes = "Accepts a json packet as POST. Updates a Vault object with the supplied metadata.")
+    notes = "Accepts a json packet as POST. Updates a Vault object with the supplied files.")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "body", required = true, dataType = "org.broadinstitute.dsde.vault.datamanagement.domain.Analysis", paramType = "body", value = "Analysis to update")
   ))
