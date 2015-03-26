@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
+import org.broadinstitute.dsde.vault.common.openam.OpenAMSession
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
 import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
 import org.broadinstitute.dsde.vault.datamanagement.model.{Analysis, UnmappedBAM}
@@ -15,20 +16,20 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
 
   "AnalysisService" - {
     "when accessing the /analyses path" - {
-      val files = Option(Map[String, String]())
-      val metadata = Option(Map("ownerId" -> "user"))
+      val files = Option(Map.empty[String, String])
+      val metadata = Option(Map.empty[String, String])
       var createdId: Option[String] = None
 
       // this test relies on adding relations to pre-existing ubams. Create those ubams first!
       val input = Option((
         for (x <- 1 to 3) yield
-          DataManagementController.createUnmappedBAM(UnmappedBAM(Map.empty, Map.empty), "AnalysisServiceSpec").id.get
+        DataManagementController.createUnmappedBAM(UnmappedBAM(Map.empty, Map.empty), "AnalysisServiceSpec").id.get
         ).sorted.toSeq)
 
       "POST should store a new Analysis" in {
         assume(input.nonEmpty)
 
-        Post(pathBase, Analysis(input, metadata, files = files)) ~> ingestRoute ~> check {
+        Post(pathBase, Analysis(input, metadata, files = files)) ~> OpenAMSession ~> ingestRoute ~> check {
           val analysis = responseAs[Analysis]
           analysis.input.map(_.sorted) should be(input)
           analysis.files should be(files)
@@ -58,8 +59,8 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
 
       "POST with a bad input id should return a bad request error" in {
         val badInput = input.map(_ :+ "intentionallyBadForeignKey")
-          Post(pathBase, Analysis(badInput, metadata, files)) ~> sealRoute(ingestRoute) ~> check {
-            status === BadRequest
+        Post(pathBase, Analysis(badInput, metadata, files)) ~> OpenAMSession ~> sealRoute(ingestRoute) ~> check {
+          status === BadRequest
         }
       }
 
@@ -68,7 +69,7 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
 
         val analysisIngest = Analysis(input, metadata)
 
-        Post(pathBase, analysisIngest) ~> ingestRoute ~> check {
+        Post(pathBase, analysisIngest) ~> OpenAMSession ~> ingestRoute ~> check {
           val analysis = responseAs[Analysis]
           analysis.input.map(_.sorted) should be(input)
           analysis.files should be(empty)
@@ -89,16 +90,16 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
           "alignment_summary_metrics" -> "gcs://path/to/alignment_summary_metrics"
         ))
         val completedMetadata = Option(Map(
-          "ownerId" -> "userUpdate"
+          "newKey" -> "newValue"
         ))
 
         val analysisComplete = analysisCreated.copy(metadata = completedMetadata, files = completedFiles)
 
-        Post(pathBase + "/" + analysisComplete.id.get + "/outputs", analysisComplete) ~> completeRoute ~> check {
+        Post(pathBase + "/" + analysisComplete.id.get + "/outputs", analysisComplete) ~> OpenAMSession ~> completeRoute ~> check {
           val analysis = responseAs[Analysis]
           analysis.input.map(_.sorted) should be(input)
           analysis.files should be(completedFiles)
-          // NOTE: for now, ownerId does NOT get updated, so this should be the metadata as passed in.
+          // NOTE: metadata should NOT currently be updated
           analysis.metadata should be(metadata)
           analysis.id shouldNot be(empty)
         }
@@ -106,7 +107,8 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
         val entity = DataManagementController.getEntity(analysisComplete.id.get)
         entity shouldNot be(empty)
         entity.get.createdBy should be("userCreate")
-        entity.get.modifiedBy should be(Option("userUpdate"))
+        entity.get.modifiedBy shouldNot be(empty)
+        entity.get.modifiedBy.get shouldNot be(empty)
       }
 
     }

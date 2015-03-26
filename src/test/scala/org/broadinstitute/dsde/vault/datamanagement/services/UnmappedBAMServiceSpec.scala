@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
+import org.broadinstitute.dsde.vault.common.openam.OpenAMSession
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
 import org.broadinstitute.dsde.vault.datamanagement.model.UnmappedBAM
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
@@ -17,7 +18,7 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
       var createdId: Option[String] = None
 
       "POST should store a new unmapped BAM" in {
-        Post("/ubams", UnmappedBAM(files, metadata)) ~> ingestRoute ~> check {
+        Post("/ubams", UnmappedBAM(files, metadata)) ~> OpenAMSession ~> ingestRoute ~> check {
           val unmappedBAM = responseAs[UnmappedBAM]
           unmappedBAM.files should be(files)
           unmappedBAM.metadata should be(metadata)

@@ -1,6 +1,7 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
 import com.wordnik.swagger.annotations._
+import org.broadinstitute.dsde.vault.common.openam.OpenAMDirectives._
 import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
 import org.broadinstitute.dsde.vault.datamanagement.model.UnmappedBAM
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
@@ -56,11 +57,12 @@ trait UnmappedBAMService extends HttpService {
   def ingestRoute = {
     path("ubams") {
       post {
-        entity(as[UnmappedBAM]) { unmappedBAM =>
-          respondWithMediaType(`application/json`) {
-            complete {
-              val ownerId = unmappedBAM.metadata("ownerId")
-              DataManagementController.createUnmappedBAM(unmappedBAM, ownerId).toJson.prettyPrint
+        commonNameByCookie { commonName =>
+          entity(as[UnmappedBAM]) { unmappedBAM =>
+            respondWithMediaType(`application/json`) {
+              complete {
+                DataManagementController.createUnmappedBAM(unmappedBAM, commonName).toJson.prettyPrint
+              }
             }
           }
         }

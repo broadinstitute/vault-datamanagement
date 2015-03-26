@@ -1,17 +1,10 @@
 package org.broadinstitute.dsde.vault.datamanagement
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.ConfigFactory
+import org.broadinstitute.dsde.vault.common.util.ConfigUtil
 
 object DataManagementConfig {
   private val config = ConfigFactory.load()
-
-  private def getOrElse(config: Config, path: String, default: String): String = {
-    if (config.hasPath(path)) config.getString(path) else default
-  }
-
-  private def getOption(config: Config, path: String, default: Option[Int] = None): Option[Int] = {
-    if (config.hasPath(path)) Option(config.getInt(path)) else default
-  }
 
   object HttpConfig {
     private val httpConfig = config.getConfig("http")
@@ -40,12 +33,12 @@ object DataManagementConfig {
     lazy val slickDriver = database.getString("slick.driver")
     lazy val liquibaseSetup = database.hasPath("liquibase")
     lazy val liquibaseChangeLog = database.getString("liquibase.changelog")
-    lazy val liquibaseConnection = getOrElse(database, "liquibase.connection", "liquibase.database.jvm.JdbcConnection")
+    lazy val liquibaseConnection = ConfigUtil.getStringOrElse(database, "liquibase.connection", "liquibase.database.jvm.JdbcConnection")
     lazy val jdbcUrl = database.getString("jdbc.url")
     lazy val jdbcDriver = database.getString("jdbc.driver")
-    lazy val jdbcUser = getOrElse(database, "jdbc.user", null)
-    lazy val jdbcPassword = getOrElse(database, "jdbc.password", null)
-    lazy val c3p0MaxStatementsOption = getOption(database, "c3p0.maxStatements")
+    lazy val jdbcUser = ConfigUtil.getStringOrElse(database, "jdbc.user", null)
+    lazy val jdbcPassword = ConfigUtil.getStringOrElse(database, "jdbc.password", null)
+    lazy val c3p0MaxStatementsOption = ConfigUtil.getIntOption(database, "c3p0.maxStatements")
   }
 
 }
