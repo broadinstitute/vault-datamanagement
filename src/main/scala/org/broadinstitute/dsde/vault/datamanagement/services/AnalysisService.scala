@@ -49,7 +49,7 @@ trait AnalysisService extends HttpService {
     produces = "application/json", consumes = "application/json", response = classOf[Analysis],
     notes = "Accepts a json packet as POST. Creates a Vault object with the supplied metadata.")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "body", required = true, dataType = "org.broadinstitute.dsde.vault.datamanagement.domain.Analysis", paramType = "body", value = "Analysis to create")
+    new ApiImplicitParam(name = "body", required = true, dataType = "org.broadinstitute.dsde.vault.datamanagement.model.Analysis", paramType = "body", value = "Analysis to create")
   ))
   @ApiResponses(Array(
     new ApiResponse(code = 200, message = "Successful"),
@@ -77,7 +77,7 @@ trait AnalysisService extends HttpService {
     notes = "Accepts a json packet as POST. Updates a Vault object with the supplied files.")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "id", required = true, dataType = "string", paramType = "path", value = "Analysis Vault ID"),
-    new ApiImplicitParam(name = "body", required = true, dataType = "org.broadinstitute.dsde.vault.datamanagement.domain.Analysis", paramType = "body", value = "Analysis to update")
+    new ApiImplicitParam(name = "body", required = true, dataType = "org.broadinstitute.dsde.vault.datamanagement.model.Analysis", paramType = "body", value = "Analysis to update")
   ))
   @ApiResponses(Array(
     new ApiResponse(code = 200, message = "Successful"),
