@@ -133,7 +133,6 @@ class DataAccess(val driver: JdbcProfile)
     insertRelation(typeEntity.guid.get, entityGUID, inputGuid)
   }
 
-  // TODO: Need liquibase index for this search by attribute name,value.
   private val entityByTypeAttribute = Compiled(
     (entityType: Column[String],
      attributeName: Column[String],

@@ -89,4 +89,12 @@
 
     </changeSet>
 
+    <changeSet id="addAttrNameValueIndex" author="tsharpe">
+        <createIndex indexName="ATTRIBUTE_BY_NAME_AND_VAL_IDX" tableName="ATTRIBUTE" unique="false">
+            <column name="NAME"/>
+            <column name="ATTRVALUE"/>
+            <column name="ENTITY_GUID"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>
