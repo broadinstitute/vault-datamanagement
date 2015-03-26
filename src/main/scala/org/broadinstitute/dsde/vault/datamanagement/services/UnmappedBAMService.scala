@@ -47,7 +47,7 @@ trait UnmappedBAMService extends HttpService {
     produces = "application/json", consumes = "application/json", response = classOf[UnmappedBAM],
     notes = "Accepts a json packet as POST. Creates a Vault object with the supplied metadata.")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "body", required = true, dataType = "org.broadinstitute.dsde.vault.datamanagement.domain.UnmappedBAM", paramType = "body", value = "uBAM to create")
+    new ApiImplicitParam(name = "body", required = true, dataType = "org.broadinstitute.dsde.vault.datamanagement.model.UnmappedBAM", paramType = "body", value = "uBAM to create")
   ))
   @ApiResponses(Array(
     new ApiResponse(code = 200, message = "Successful"),
