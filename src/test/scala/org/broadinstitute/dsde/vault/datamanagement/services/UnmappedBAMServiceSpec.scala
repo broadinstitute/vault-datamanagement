@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
+import org.broadinstitute.dsde.vault.common.openam.OpenAMSession
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
 import org.broadinstitute.dsde.vault.datamanagement.model.UnmappedBAM
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
@@ -13,11 +14,11 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
   "UnmappedBAMService" - {
     "when accessing the /ubams path" - {
       val files = Map("bam" -> "/path/to/bam", "bai" -> "/path/to/bai")
-      val metadata = Map("ownerId" -> "user")
+      val metadata = Map("someKey" -> "someValue")
       var createdId: Option[String] = None
 
       "POST should store a new unmapped BAM" in {
-        Post("/ubams", UnmappedBAM(files, metadata)) ~> ingestRoute ~> check {
+        Post("/ubams", UnmappedBAM(files, metadata)) ~> OpenAMSession ~> ingestRoute ~> check {
           val unmappedBAM = responseAs[UnmappedBAM]
           unmappedBAM.files should be(files)
           unmappedBAM.metadata should be(metadata)
@@ -39,7 +40,7 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
 
       "GET of an unknown id should return a not found error" in {
         Get("/ubams/unknown-id") ~> sealRoute(describeRoute) ~> check {
-          status === NotFound
+          status should be(NotFound)
         }
       }
     }

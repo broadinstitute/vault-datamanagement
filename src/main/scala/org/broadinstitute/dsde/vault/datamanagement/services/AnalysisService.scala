@@ -3,6 +3,7 @@ package org.broadinstitute.dsde.vault.datamanagement.services
 import javax.ws.rs.Path
 
 import com.wordnik.swagger.annotations._
+import org.broadinstitute.dsde.vault.common.openam.OpenAMDirectives._
 import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
 import org.broadinstitute.dsde.vault.datamanagement.model.Analysis
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
@@ -59,11 +60,12 @@ trait AnalysisService extends HttpService {
   def ingestRoute = {
     path("analyses") {
       post {
-        entity(as[Analysis]) { analysis =>
-          respondWithMediaType(`application/json`) {
-            complete {
-              val ownerId = analysis.metadata.get("ownerId")
-              DataManagementController.createAnalysis(analysis, ownerId).toJson.prettyPrint
+        commonNameFromCookie { commonName =>
+          entity(as[Analysis]) { analysis =>
+            respondWithMediaType(`application/json`) {
+              complete {
+                DataManagementController.createAnalysis(analysis, commonName).toJson.prettyPrint
+              }
             }
           }
         }
@@ -86,11 +88,12 @@ trait AnalysisService extends HttpService {
   def completeRoute = {
     path("analyses" / Segment / "outputs") { id =>
       post {
-        entity(as[Analysis]) { analysis =>
-          respondWithMediaType(`application/json`) {
-            complete {
-              val ownerId = analysis.metadata.get("ownerId")
-              DataManagementController.completeAnalysis(id, analysis.files.get, ownerId).toJson.prettyPrint
+        commonNameFromCookie { commonName =>
+          entity(as[Analysis]) { analysis =>
+            respondWithMediaType(`application/json`) {
+              complete {
+                DataManagementController.completeAnalysis(id, analysis.files.get, commonName).toJson.prettyPrint
+              }
             }
           }
         }

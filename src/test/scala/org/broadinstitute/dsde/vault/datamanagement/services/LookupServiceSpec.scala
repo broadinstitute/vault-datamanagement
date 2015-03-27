@@ -16,7 +16,7 @@ class LookupServiceSpec extends DataManagementDatabaseFreeSpec with LookupServic
   "LookupBAMService" - {
     "when accessing the /query/{entityType}/{attributeName}/{attributeValue} path" - {
       val testValue = UUID.randomUUID().toString
-      val metadata = Map("ownerId" -> "user", "uniqueTest" -> testValue)
+      val metadata = Map("sameKey" -> "sameValue", "uniqueTest" -> testValue)
       val entityGUID = DataManagementController.createUnmappedBAM(UnmappedBAM(Map.empty, metadata), "LookupServiceSpec").id.get
 
       "Lookup should return previously stored unmapped BAM" in {
@@ -29,25 +29,25 @@ class LookupServiceSpec extends DataManagementDatabaseFreeSpec with LookupServic
 
       "Lookup of unknown entity type should return not found" in {
         Get(s"/query/ubam_similar/uniqueTest/$testValue") ~> sealRoute(lookupEntityByTypeAttributeNameValueRoute) ~> check {
-          status === NotFound
+          status should be(NotFound)
         }
       }
 
       "Lookup of unknown attribute name return not found" in {
         Get(s"/query/ubam/uniqueTest_similar/$testValue") ~> sealRoute(lookupEntityByTypeAttributeNameValueRoute) ~> check {
-          status === NotFound
+          status should be(NotFound)
         }
       }
 
       "Lookup of unknown attribute value should return not found" in {
         Get("/query/ubam/uniqueTest/unknownValue") ~> sealRoute(lookupEntityByTypeAttributeNameValueRoute) ~> check {
-          status === NotFound
+          status should be(NotFound)
         }
       }
 
       "Lookup of mismatched attribute name + value should return not found" in {
         Get(s"/query/ubam/ownerId/$testValue") ~> sealRoute(lookupEntityByTypeAttributeNameValueRoute) ~> check {
-          status === NotFound
+          status should be(NotFound)
         }
       }
     }
