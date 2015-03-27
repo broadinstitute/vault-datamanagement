@@ -57,7 +57,7 @@ trait UnmappedBAMService extends HttpService {
   def ingestRoute = {
     path("ubams") {
       post {
-        commonNameByCookie { commonName =>
+        commonNameFromCookie { commonName =>
           entity(as[UnmappedBAM]) { unmappedBAM =>
             respondWithMediaType(`application/json`) {
               complete {

@@ -53,14 +53,14 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
 
       "GET of an unknown id should return a not found error" in {
         Get(pathBase + "/unknown-id") ~> sealRoute(describeRoute) ~> check {
-          status === NotFound
+          status should be(NotFound)
         }
       }
 
       "POST with a bad input id should return a bad request error" in {
         val badInput = input.map(_ :+ "intentionallyBadForeignKey")
         Post(pathBase, Analysis(badInput, metadata, files)) ~> OpenAMSession ~> sealRoute(ingestRoute) ~> check {
-          status === BadRequest
+          status should be(InternalServerError)
         }
       }
 

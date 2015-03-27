@@ -8,6 +8,9 @@ object OpenAMResponse extends DefaultJsonProtocol {
 
   case class IdFromSessionResponse(id: String, realm: Option[String], dn: String, successURL: String, fullLoginURL: String)
 
+  /**
+   * Response with the username and common names (CN) by using the token.
+   */
   case class UsernameCNResponse(username: String, cn: Seq[String])
 
   implicit val impAuthenticateResponse = jsonFormat2(AuthenticateResponse)

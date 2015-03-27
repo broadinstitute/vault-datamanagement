@@ -8,7 +8,7 @@ object OpenAMDirectives {
     _.content
   }
 
-  val optionalTokenFromCookie = optionalCookie(OpenAMConfig.tokenCookie) map {
+  val tokenFromOptionalCookie = optionalCookie(OpenAMConfig.tokenCookie) map {
     // when there is a cookie
     _ map {
       // return the content of the cookie
@@ -16,12 +16,12 @@ object OpenAMDirectives {
     }
   }
 
-  val commonNameByCookie = tokenFromCookie map {
+  val commonNameFromCookie = tokenFromCookie map {
     // get the common name from the token
     case token => commonNameFromToken(token)
   }
 
-  val optionalCommonNameByCookie = optionalTokenFromCookie map {
+  val commonNameFromOptionalCookie = tokenFromOptionalCookie map {
     // when there is a cookie
     _ map {
       // get the common name from the token

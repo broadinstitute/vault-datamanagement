@@ -52,6 +52,9 @@ object OpenAMClient {
     waitResponse(pipeline(Post(uri, Map.empty[String, String])))
   }
 
+  /**
+   * Retrieves the username and common names (CN) by using the token.
+   */
   def lookupUsernameCN(deploymentUri: String, token: String, id: String, realm: Option[String]) = {
     val uri = Uri(s"$deploymentUri/json${realm.getOrElse("")}/users/$id").
       withQuery("_fields" -> "username,cn")

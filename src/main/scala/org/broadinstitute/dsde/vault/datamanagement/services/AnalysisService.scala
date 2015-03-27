@@ -60,7 +60,7 @@ trait AnalysisService extends HttpService {
   def ingestRoute = {
     path("analyses") {
       post {
-        commonNameByCookie { commonName =>
+        commonNameFromCookie { commonName =>
           entity(as[Analysis]) { analysis =>
             respondWithMediaType(`application/json`) {
               complete {
@@ -88,7 +88,7 @@ trait AnalysisService extends HttpService {
   def completeRoute = {
     path("analyses" / Segment / "outputs") { id =>
       post {
-        commonNameByCookie { commonName =>
+        commonNameFromCookie { commonName =>
           entity(as[Analysis]) { analysis =>
             respondWithMediaType(`application/json`) {
               complete {
