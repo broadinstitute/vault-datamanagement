@@ -61,14 +61,15 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
       "POST with a bad input id should return a bad request error" in {
         val badInput = input.map(_ :+ "intentionallyBadForeignKey")
         // this test is expected to generate an integrity constraint exception
-        implicit def myExceptionHandler =
+        implicit def myExceptionHandler: ExceptionHandler =
           ExceptionHandler {
-            case e:java.sql.SQLIntegrityConstraintViolationException =>
+            case e: java.sql.SQLIntegrityConstraintViolationException =>
               complete(InternalServerError, "intentionally handled error")
           }
 
         Post(pathBase, Analysis(badInput, metadata, files)) ~> OpenAMSession ~> sealRoute(ingestRoute) ~> check {
           status should be(InternalServerError)
+          responseAs[String] should be("intentionally handled error")
         }
       }
 
