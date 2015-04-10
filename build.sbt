@@ -1,6 +1,46 @@
 name := "Vault-DataManagement"
 
-version := "0.1"
+val vaultOrg = "org.broadinstitute.dsde.vault"
+
+organization := vaultOrg
+
+// Canonical version
+val versionRoot = "0.1"
+
+// Get the revision, or -1 (later will be bumped to zero)
+val versionRevision = ("git rev-list --count HEAD" #|| "echo -1").!!.trim.toInt
+
+// Set the suffix to None...
+val versionSuffix = {
+  try {
+    // ...except when there are no modifications...
+    if ("git diff --quiet HEAD".! == 0) {
+      // ...then set the suffix to the revision "dash" git hash
+      Option(versionRevision + "-" + "git rev-parse --short HEAD".!!.trim)
+    } else {
+      None
+    }
+  } catch {
+    case e: Exception =>
+      None
+  }
+}
+
+// Set the composite version
+version := versionRoot + "-" + versionSuffix.getOrElse((versionRevision + 1) + "-SNAPSHOT")
+
+val artifactory = "http://artifactory.broadinstitute.org:8081/artifactory/"
+
+credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
+
+publishTo := {
+  if (isSnapshot.value)
+    None // NOTE: Use publish-local when working on snapshots
+  else
+    Option("artifactory-releases-publish" at artifactory + "libs-release-local")
+}
+
+resolvers += "artifactory-releases" at artifactory + "libs-release"
 
 scalaVersion := "2.11.2"
 
@@ -10,7 +50,8 @@ libraryDependencies ++= {
   val akkaV = "2.3.6"
   val sprayV = "1.3.2"
   Seq(
-    "io.spray" %% "spray-can" % sprayV
+    vaultOrg %% "vault-common" % "0.1-6-b6c0205"
+    , "io.spray" %% "spray-can" % sprayV
     , "io.spray" %% "spray-routing" % sprayV
     , "io.spray" %% "spray-json" % "1.3.1"
     , "io.spray" %% "spray-client" % sprayV
@@ -31,7 +72,7 @@ libraryDependencies ++= {
   )
 }
 
-Revolver.settings
+Revolver.settings.settings
 
 // Don't package the application.conf in the assembly
 excludeFilter in(Compile, unmanagedResources) := HiddenFileFilter || "application.conf"
