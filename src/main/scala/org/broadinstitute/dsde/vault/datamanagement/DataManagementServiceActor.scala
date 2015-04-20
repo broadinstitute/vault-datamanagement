@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.vault.datamanagement
 
-import akka.actor.ActorLogging
+import akka.actor.{ActorRefFactory, ActorLogging}
 import com.gettyimages.spray.swagger.SwaggerHttpService
 import com.wordnik.swagger.model.ApiInfo
 import org.broadinstitute.dsde.vault.datamanagement.services._
@@ -29,11 +29,16 @@ class DataManagementServiceActor extends HttpServiceActor with ActorLogging {
     def actorRefFactory = context
   }
 
+  val uBAMCollections = new UBamCollectionService {
+    def actorRefFactory = context
+  }
+
   // this actor runs all routes
   def receive = runRoute(
     unmappedBAM.routes ~
       analysis.routes ~
       lookupService.routes ~
+      uBAMCollections.routes ~
       swaggerService.routes ~
       swaggerUiService
   )

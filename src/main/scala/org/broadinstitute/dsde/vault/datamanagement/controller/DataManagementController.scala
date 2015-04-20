@@ -72,6 +72,17 @@ object DataManagementController {
         getAnalysisWithSession(id)
     }
   }
+  // ================= UBam Collections methods =================
+
+  def createUBAMCollection(collection: UBamCollection, createdBy: String): Unit ={
+    database withTransaction {
+      implicit session =>
+        val entity = dataAccess.insertEntity(EntityType.UBAM_COLLECTION.databaseKey, createdBy)
+        //dataAccess.addFiles(entity.guid.get, createdBy, unmappedBAM.files)
+        //dataAccess.addMetadata(entity.guid.get, unmappedBAM.metadata)
+        //unmappedBAM.copy(id = entity.guid)
+    }
+  }
 
   // ==================== common utility methods ====================
   private def getAnalysisWithSession(id: String)(implicit session: Session): Option[Analysis] = {
