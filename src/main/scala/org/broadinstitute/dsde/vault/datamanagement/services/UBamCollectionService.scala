@@ -4,9 +4,11 @@ import com.wordnik.swagger.annotations._
 import org.broadinstitute.dsde.vault.common.openam.OpenAMDirectives._
 import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
 import org.broadinstitute.dsde.vault.datamanagement.model.{UBamCollection}
-import spray.json._
+import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
 import spray.http.MediaTypes._
-import spray.routing.HttpService
+import spray.httpx.SprayJsonSupport._
+import spray.json._
+import spray.routing._
 
 @Api(value = "/collections", description = "uBAM Collection Service", produces = "application/json")
 trait UBamCollectionService extends HttpService {
@@ -15,9 +17,9 @@ trait UBamCollectionService extends HttpService {
 
   @ApiOperation(value = "Creates an uBAM collection", nickname = "ubam_collection_ingest", httpMethod = "POST",
     produces = "application/json", consumes = "application/json", response = classOf[UBamCollection],
-    notes = "Accepts a json packet as POST. Creates a Vault collection object with the supplied metadata.")
+    notes = "Accepts a json packet as POST. Creates a Vault collection object with the supplied ubam ids and the supplied metadata.")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "body", required = true, dataType = "org.broadinstitute.dsde.vault.datamanagement.model.UBamCollection", paramType = "path", value = "entity type")
+    new ApiImplicitParam(name = "body", required = true, dataType = "org.broadinstitute.dsde.vault.datamanagement.model.UBamCollection", paramType = "body", value = "Collection to create")
   ))
   @ApiResponses(Array(
     new ApiResponse(code = 200, message = "Successful"),

@@ -133,6 +133,26 @@ class DataAccess(val driver: JdbcProfile)
     insertRelation(typeEntity.guid.get, entityGUID, inputGuid)
   }
 
+  def addMembers(entityGUID: String, createdBy: String, members: Seq[String])(implicit session: Session) {
+    def addMemberGuid(inputGuid: String) =
+      addMember(entityGUID, createdBy, inputGuid)
+    members.foreach(addMemberGuid)
+  }
+
+  def addMember(entityGUID: String, createdBy: String, memberGuid: String)(implicit session: Session) {
+    // Create an entity for the member
+    val typeEntity = insertEntity(MEMBER_TYPE.entityType, createdBy)
+
+    // We count on the database to handle foreign key constraint errors for us. These will throw an exception
+    // which will bubble up and result in the wrapping request returning an error.
+
+    // Create a relation row with:
+    //   2) The entity1 is the passed in original entity
+    //   1) The relation is the input type we just created
+    //   3) The entity2 is the id of the unmapped BAM specified by the user
+    insertRelation(typeEntity.guid.get, entityGUID, memberGuid)
+  }
+
   private val entityByTypeAttribute = Compiled(
     (entityType: Column[String],
      attributeName: Column[String],

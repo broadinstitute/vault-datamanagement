@@ -74,13 +74,13 @@ object DataManagementController {
   }
   // ================= UBam Collections methods =================
 
-  def createUBAMCollection(collection: UBamCollection, createdBy: String): Unit ={
+  def createUBAMCollection(collection: UBamCollection, createdBy: String): UBamCollection ={
     database withTransaction {
       implicit session =>
         val entity = dataAccess.insertEntity(EntityType.UBAM_COLLECTION.databaseKey, createdBy)
-        //dataAccess.addFiles(entity.guid.get, createdBy, unmappedBAM.files)
-        //dataAccess.addMetadata(entity.guid.get, unmappedBAM.metadata)
-        //unmappedBAM.copy(id = entity.guid)
+        dataAccess.addMetadata(entity.guid.get, collection.metadata)
+        dataAccess.addMembers(entity.guid.get, createdBy, collection.members)
+        collection.copy(id = entity.guid)
     }
   }
 

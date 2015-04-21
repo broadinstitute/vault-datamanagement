@@ -1,6 +1,6 @@
 package org.broadinstitute.dsde.vault.datamanagement
 
-import akka.actor.{ActorRefFactory, ActorLogging}
+import akka.actor.ActorLogging
 import com.gettyimages.spray.swagger.SwaggerHttpService
 import com.wordnik.swagger.model.ApiInfo
 import org.broadinstitute.dsde.vault.datamanagement.services._
