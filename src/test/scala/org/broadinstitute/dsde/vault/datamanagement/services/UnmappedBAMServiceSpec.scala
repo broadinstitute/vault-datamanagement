@@ -2,6 +2,7 @@ package org.broadinstitute.dsde.vault.datamanagement.services
 
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
 import org.broadinstitute.dsde.vault.datamanagement.model.UnmappedBAM
+import org.broadinstitute.dsde.vault.datamanagement.model.Properties._
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
 import spray.http.StatusCodes._
 import spray.httpx.SprayJsonSupport._
@@ -13,7 +14,8 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
     val versions = Table(
       "version",
       None,
-      Some(1)
+      Option(1),
+      Option(2)
     )
 
     forAll(versions) { (version: Option[Int]) =>
@@ -22,6 +24,7 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
       s"when accessing the $pathBase path" - {
         val files = Map("bam" -> "/path/to/bam", "bai" -> "/path/to/bai")
         val metadata = Map("someKey" -> "someValue")
+        var properties: Option[Map[String, String]] = None
         var createdId: Option[String] = None
 
         "POST should store a new unmapped BAM" in {
@@ -31,6 +34,15 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
             unmappedBAM.metadata should be(metadata)
             unmappedBAM.id shouldNot be(empty)
             createdId = unmappedBAM.id
+
+            version match {
+              case Some(x) if x > 1 => {
+                unmappedBAM.properties.get(CreatedBy) shouldNot be(empty)
+                unmappedBAM.properties.get(CreatedDate) shouldNot be(empty)
+                properties = unmappedBAM.properties
+              }
+              case _ => unmappedBAM.properties should be(empty)
+            }
           }
         }
 
@@ -42,6 +54,15 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
             unmappedBAM.files should be(files)
             unmappedBAM.metadata should be(metadata)
             unmappedBAM.id should be(createdId)
+
+            version match {
+              case Some(x) if x > 1 => {
+                unmappedBAM.properties should be(properties)
+                unmappedBAM.properties.get.get(CreatedBy) shouldNot be(empty)
+                unmappedBAM.properties.get.get(CreatedDate) shouldNot be(empty)
+              }
+              case _ => unmappedBAM.properties should be(empty)
+            }
           }
         }
 

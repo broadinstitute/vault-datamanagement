@@ -20,31 +20,32 @@ object DataManagementController {
   def database: Database = Database.forDataSource(comboPooledDataSource)
 
   // ==================== unmapped BAMS ====================
-  def createUnmappedBAM(unmappedBAM: UnmappedBAM, createdBy: String): UnmappedBAM = {
+  def createUnmappedBAM(unmappedBAM: UnmappedBAM, createdBy: String, version: Option[Int]): UnmappedBAM = {
     database withTransaction {
       implicit session =>
         val entity = dataAccess.insertEntity(EntityType.UNMAPPED_BAM.databaseKey, createdBy)
         dataAccess.addFiles(entity.guid.get, createdBy, unmappedBAM.files)
         dataAccess.addMetadata(entity.guid.get, unmappedBAM.metadata)
-        unmappedBAM.copy(id = entity.guid)
+        unmappedBAM.copy(properties = getProperties(entity, version), id = entity.guid)
     }
   }
 
-  def getUnmappedBAM(id: String): Option[UnmappedBAM] = {
+  def getUnmappedBAM(id: String, version: Option[Int]): Option[UnmappedBAM] = {
     database withTransaction {
       implicit session =>
         dataAccess.getEntity(id).map(
           entity => {
             val files = dataAccess.getFiles(entity.guid.get)
             val metadata = dataAccess.getMetadata(entity.guid.get)
-            UnmappedBAM(files, metadata, entity.guid)
+            val properties = getProperties(entity, version)
+            UnmappedBAM(files, metadata, properties, entity.guid)
           }
         )
     }
   }
 
   // ==================== analyses ====================
-  def createAnalysis(analysis: Analysis, createdBy: String): Analysis = {
+  def createAnalysis(analysis: Analysis, createdBy: String, version: Option[Int]): Analysis = {
     database withTransaction {
       implicit session =>
         val entity = dataAccess.insertEntity(EntityType.ANALYSIS.databaseKey, createdBy)
@@ -53,36 +54,47 @@ object DataManagementController {
         // leaving it here in case the use case changes in the future.
         analysis.files map { files => dataAccess.addFiles(entity.guid.get, createdBy, files)}
         dataAccess.addMetadata(entity.guid.get, analysis.metadata.get)
-        analysis.copy(id = entity.guid)
+        analysis.copy(properties = getProperties(entity, version), id = entity.guid)
     }
   }
 
-  def getAnalysis(id: String): Option[Analysis] = {
+  def getAnalysis(id: String, version: Option[Int]): Option[Analysis] = {
     database withTransaction {
       implicit session =>
-        getAnalysisWithSession(id)
+        getAnalysisWithSession(id, version)
     }
   }
 
-  def completeAnalysis(id: String, files: Map[String, String], updatedBy: String): Option[Analysis] = {
+  def completeAnalysis(id: String, files: Map[String, String], updatedBy: String, version: Option[Int]): Option[Analysis] = {
     database withTransaction {
       implicit session =>
         dataAccess.updateEntity(id, updatedBy)
         dataAccess.addFiles(id, updatedBy, files)
-        getAnalysisWithSession(id)
+        getAnalysisWithSession(id, version)
     }
   }
 
   // ==================== common utility methods ====================
-  private def getAnalysisWithSession(id: String)(implicit session: Session): Option[Analysis] = {
+  private def getAnalysisWithSession(id: String, version: Option[Int])(implicit session: Session): Option[Analysis] = {
     dataAccess.getEntity(id).map(
       entity => {
         val input = dataAccess.getInputs(entity.guid.get)
         val files = dataAccess.getFiles(entity.guid.get)
         val metadata = dataAccess.getMetadata(entity.guid.get)
-        Analysis(Option(input), Option(metadata), Option(files), entity.guid)
+        Analysis(Option(input), Option(metadata), Option(files), getProperties(entity, version), entity.guid)
       }
     )
+  }
+  
+  private def getProperties(entity: Entity, version: Option[Int]): Option[Map[String, String]] = version match {
+    case Some(x) if x > 1 =>
+      import org.broadinstitute.dsde.vault.datamanagement.model.Properties._
+      val pairs = List((CreatedBy, Option(entity.createdBy)),
+        (CreatedDate, entity.createdDate.map(_.getTime.toString)),
+        (ModifiedBy, entity.modifiedBy),
+        (ModifiedDate, entity.modifiedDate.map(_.getTime.toString)))
+      Option(pairs.filter(_._2.isDefined).map(p => (p._1, p._2.get)).toMap)
+    case _ => None
   }
 
   // ==================== test methods ====================
