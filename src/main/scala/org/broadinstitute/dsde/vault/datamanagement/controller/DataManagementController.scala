@@ -79,7 +79,7 @@ object DataManagementController {
       implicit session =>
         val entity = dataAccess.insertEntity(EntityType.UBAM_COLLECTION.databaseKey, createdBy)
         dataAccess.addMetadata(entity.guid.get, collection.metadata)
-        dataAccess.addMembers(entity.guid.get, createdBy, collection.members)
+        dataAccess.addMembers(entity.guid.get, createdBy, collection.members.get)
         collection.copy(id = entity.guid)
     }
   }

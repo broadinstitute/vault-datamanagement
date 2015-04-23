@@ -2,7 +2,10 @@ package org.broadinstitute.dsde.vault.datamanagement.services
 
 import org.broadinstitute.dsde.vault.common.openam.OpenAMSession
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
-import org.broadinstitute.dsde.vault.datamanagement.model.UBamCollection
+import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
+import org.broadinstitute.dsde.vault.datamanagement.model.{UBamCollection, UnmappedBAM}
+import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
+import spray.httpx.SprayJsonSupport._
 
 class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBamCollectionService {
 
@@ -10,8 +13,12 @@ class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBam
 
   "UBamCollectionService" - {
     "when accessing the /collections path" - {
-      val members = List("Ubam_id_1", "Ubam_id_2", "Ubam_id_3")
       val metadata = Map("key1" -> "someKey", "key2" -> "otherKey", "key3" -> "anotherKey")
+
+      val members = Option((
+        for (x <- 1 to 3) yield
+        DataManagementController.createUnmappedBAM(UnmappedBAM(Map.empty, Map.empty), "AnalysisServiceSpec").id.get
+        ).sorted.toSeq)
 
       "POST should store a new Collection" in {
         Post( "/collections", UBamCollection(members, metadata)) ~> OpenAMSession ~> ingestRoute ~> check {
