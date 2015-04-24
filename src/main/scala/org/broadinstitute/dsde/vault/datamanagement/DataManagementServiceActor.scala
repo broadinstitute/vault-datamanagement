@@ -45,7 +45,7 @@ class DataManagementServiceActor extends HttpServiceActor with ActorLogging {
 
   val swaggerService = new SwaggerHttpService {
     // All documented API services must be added to these API types
-    override def apiTypes = Seq(typeOf[UnmappedBAMService], typeOf[AnalysisService], typeOf[LookupService])
+    override def apiTypes = Seq(typeOf[UnmappedBAMService], typeOf[AnalysisService], typeOf[LookupService], typeOf[UBamCollectionService])
 
     override def apiVersion = DataManagementConfig.SwaggerConfig.apiVersion
 

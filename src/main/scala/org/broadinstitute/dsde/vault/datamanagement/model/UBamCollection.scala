@@ -13,7 +13,7 @@ case class UBamCollection
   @(ApiModelProperty@field)(value = "The metadata key-value pairs associated with this uBAM collection.", required = true)
   metadata: Map[String, String],
 
-  @(ApiModelProperty@field)(value = "The Vault ID of this unmapped BAM collection", required = false)
+  @(ApiModelProperty@field)(value = "The Vault ID of this uBAM collection", required = false)
   id: Option[String] = None
   )
 

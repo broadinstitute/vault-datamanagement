@@ -13,11 +13,12 @@ class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBam
 
   "UBamCollectionService" - {
     "when accessing the /collections path" - {
+      //val members = Some(List("Ubam_id_1", "Ubam_id_2", "Ubam_id_3").toSeq)
       val metadata = Map("key1" -> "someKey", "key2" -> "otherKey", "key3" -> "anotherKey")
 
       val members = Option((
         for (x <- 1 to 3) yield
-        DataManagementController.createUnmappedBAM(UnmappedBAM(Map.empty, Map.empty), "AnalysisServiceSpec").id.get
+        DataManagementController.createUnmappedBAM(UnmappedBAM(Map.empty, Map.empty), "UBamCollectionServiceSpec").id.get
         ).sorted.toSeq)
 
       "POST should store a new Collection" in {
@@ -29,4 +30,8 @@ class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBam
       }
     }
   }
+
+
+/*  override def afterAll(): Unit = {
+  }*/
 }
