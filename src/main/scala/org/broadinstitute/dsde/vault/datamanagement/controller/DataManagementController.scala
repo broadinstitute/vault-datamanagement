@@ -26,7 +26,7 @@ object DataManagementController {
         val entity = dataAccess.insertEntity(EntityType.UNMAPPED_BAM.databaseKey, createdBy)
         dataAccess.addFiles(entity.guid.get, createdBy, unmappedBAM.files)
         dataAccess.addMetadata(entity.guid.get, unmappedBAM.metadata)
-        unmappedBAM.copy(id = entity.guid)
+        unmappedBAM.copy(properties = getProperties(entity), id = entity.guid)
     }
   }
 
@@ -37,7 +37,7 @@ object DataManagementController {
           entity => {
             val files = dataAccess.getFiles(entity.guid.get)
             val metadata = dataAccess.getMetadata(entity.guid.get)
-            UnmappedBAM(files, metadata, entity.guid)
+            UnmappedBAM(files, metadata, getProperties(entity), entity.guid)
           }
         )
     }
@@ -53,7 +53,7 @@ object DataManagementController {
         // leaving it here in case the use case changes in the future.
         analysis.files map { files => dataAccess.addFiles(entity.guid.get, createdBy, files)}
         dataAccess.addMetadata(entity.guid.get, analysis.metadata.get)
-        analysis.copy(id = entity.guid)
+        analysis.copy(properties = getProperties(entity), id = entity.guid)
     }
   }
 
@@ -80,9 +80,18 @@ object DataManagementController {
         val input = dataAccess.getInputs(entity.guid.get)
         val files = dataAccess.getFiles(entity.guid.get)
         val metadata = dataAccess.getMetadata(entity.guid.get)
-        Analysis(Option(input), Option(metadata), Option(files), entity.guid)
+        Analysis(Option(input), Option(metadata), Option(files), getProperties(entity), entity.guid)
       }
     )
+  }
+  
+  private def getProperties(entity: Entity): Option[Map[String, String]] = {
+    import org.broadinstitute.dsde.vault.datamanagement.model.Properties._
+    val pairs = List((created_by, Option(entity.createdBy)),
+                     (created_date, entity.createdDate.map(_.getTime.toString)),
+                     (modified_by, entity.modifiedBy),
+                     (modified_date, entity.modifiedDate.map(_.getTime.toString)))
+    Some(pairs.filter(_._2.isDefined).map(p => (p._1, p._2.get)).toMap)
   }
 
   // ==================== test methods ====================

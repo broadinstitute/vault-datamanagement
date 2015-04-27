@@ -4,6 +4,7 @@ import org.broadinstitute.dsde.vault.common.openam.OpenAMSession
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
 import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
 import org.broadinstitute.dsde.vault.datamanagement.model.{Analysis, UnmappedBAM}
+import org.broadinstitute.dsde.vault.datamanagement.model.Properties._
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
 import spray.http.StatusCodes._
 import spray.httpx.SprayJsonSupport._
@@ -19,6 +20,7 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
     "when accessing the /analyses path" - {
       val files = Option(Map.empty[String, String])
       val metadata = Option(Map.empty[String, String])
+      var properties = Option(Map.empty[String, String])
       var createdId: Option[String] = None
 
       // this test relies on adding relations to pre-existing ubams. Create those ubams first!
@@ -35,6 +37,10 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
           analysis.input.map(_.sorted) should be(input)
           analysis.files should be(files)
           analysis.metadata should be(metadata)
+          analysis.properties shouldNot be(empty)
+          analysis.properties.get.get(created_by) shouldNot be(empty)
+          analysis.properties.get.get(created_date) shouldNot be(empty)
+          properties = analysis.properties
           analysis.id shouldNot be(empty)
           createdId = analysis.id
         }
@@ -48,6 +54,7 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
           analysis.input.map(_.sorted) should be(input)
           analysis.files should be(files)
           analysis.metadata should be(metadata)
+          analysis.properties should be(properties)
           analysis.id should be(createdId)
         }
       }
@@ -76,13 +83,17 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
       "POST of an Analysis object without files should store a new Analysis" in {
         assume(input.nonEmpty)
 
-        val analysisIngest = Analysis(input, metadata)
+        val analysisIngest = Analysis(input, metadata, None)
 
         Post(pathBase, analysisIngest) ~> OpenAMSession ~> ingestRoute ~> check {
           val analysis = responseAs[Analysis]
           analysis.input.map(_.sorted) should be(input)
           analysis.files should be(empty)
           analysis.metadata should be(metadata)
+          analysis.properties.get.get(created_by) shouldNot be(empty)
+          analysis.properties.get.get(created_date) shouldNot be(empty)
+          analysis.properties.get.get(modified_by) should be(empty)
+          analysis.properties.get.get(modified_date) should be(empty)
           analysis.id shouldNot be(empty)
         }
       }
@@ -110,6 +121,10 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
           analysis.files should be(completedFiles)
           // NOTE: metadata should NOT currently be updated
           analysis.metadata should be(metadata)
+          analysis.properties.get(created_by) shouldNot be(empty)
+          analysis.properties.get(created_date) shouldNot be(empty)
+          analysis.properties.get(modified_by) shouldNot be(empty)
+          analysis.properties.get(modified_date) shouldNot be(empty)
           analysis.id shouldNot be(empty)
         }
 

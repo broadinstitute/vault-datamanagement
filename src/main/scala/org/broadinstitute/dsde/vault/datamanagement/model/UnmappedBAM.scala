@@ -13,6 +13,9 @@ case class UnmappedBAM
   @(ApiModelProperty@field)(value = "The metadata key-value pairs associated with this unmapped BAM.", required = true)
   metadata: Map[String, String],
 
+  @(ApiModelProperty@field)(value = "The properties of this unmapped BAM", required = false)
+  properties: Option[Map[String, String]] = None,
+  
   @(ApiModelProperty@field)(value = "The Vault ID of this unmapped BAM", required = false)
   id: Option[String] = None
   )
