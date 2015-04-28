@@ -133,6 +133,24 @@ class DataAccess(val driver: JdbcProfile)
     insertRelation(typeEntity.guid.get, entityGUID, inputGuid)
   }
 
+  private val membersForEntity = Compiled(
+    (entityGUID: Column[String]) => for {
+
+     //Retrieve the relation where our "entityGUID" parameter is the entity1GUID
+     relation <- relations
+     if relation.entity1GUID === entityGUID
+
+     // Using the foreign key, filter for the Relation.relation.entityType === INPUT_TYPE.entityType
+     typeEntity <- relation.relation
+     if typeEntity.entityType === MEMBER_TYPE.entityType
+
+    } yield (relation.entity2GUID))
+
+
+  def getMembers(entityGUID: String)(implicit session: Session): Seq[String] = {
+    membersForEntity(entityGUID).list
+  }
+
   def addMembers(entityGUID: String, createdBy: String, members: Seq[String])(implicit session: Session) {
     def addMemberGuid(inputGuid: String) =
       addMember(entityGUID, createdBy, inputGuid)

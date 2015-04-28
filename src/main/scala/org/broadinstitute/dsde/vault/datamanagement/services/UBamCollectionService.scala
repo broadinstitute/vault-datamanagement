@@ -13,7 +13,7 @@ import spray.routing._
 @Api(value = "/collections", description = "uBAM Collection Service", produces = "application/json")
 trait UBamCollectionService extends HttpService {
 
-  val routes = ingestRoute
+  val routes = ingestRoute ~ describeRoute
 
   @ApiOperation(value = "Creates an uBAM collection", nickname = "ubam_collection_ingest", httpMethod = "POST",
     produces = "application/json", consumes = "application/json", response = classOf[UBamCollection],
@@ -41,4 +41,36 @@ trait UBamCollectionService extends HttpService {
       }
     }
   }
+
+  @ApiOperation(value = "Gets an Ubams Collection",
+    nickname = "ubam_get_collection",
+    httpMethod = "GET",
+    produces = "application/json",
+    response = classOf[UBamCollection],
+    responseContainer = "List",
+    notes = "Gets Vault collection object with the supplied UbamCollection id"
+  )
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "id", required = true, dataType = "string", paramType = "path", value = "uBAM Vault ID")
+  ))
+  @ApiResponses(Array(
+    new ApiResponse(code = 200, message = "Successful Request"),
+    new ApiResponse(code = 404, message = "Vault ID Not Found"),
+    new ApiResponse(code = 500, message = "Vault Internal Error")
+  ))
+  def describeRoute = {
+    path("collections" / Segment) { id =>
+      get {
+        rejectEmptyResponse {
+          respondWithMediaType(`application/json`) {
+            complete {
+              DataManagementController.getUBAMCollection(id).map(_.toJson.prettyPrint)
+            }
+          }
+        }
+      }
+    }
+  }
+
+
 }

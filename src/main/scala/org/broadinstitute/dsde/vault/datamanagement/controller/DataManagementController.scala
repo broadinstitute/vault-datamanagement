@@ -84,6 +84,19 @@ object DataManagementController {
     }
   }
 
+ def getUBAMCollection(id: String): Option[UBamCollection] = {
+   database withTransaction {
+     implicit session =>
+       dataAccess.getEntity(id).map(
+         entity => {
+           val members = dataAccess.getMembers(entity.guid.get)
+           val metadata = dataAccess.getMetadata(entity.guid.get)
+           UBamCollection(Option(members), metadata, entity.guid)
+         }
+       )
+   }
+ }
+
   // ==================== common utility methods ====================
   private def getAnalysisWithSession(id: String)(implicit session: Session): Option[Analysis] = {
     dataAccess.getEntity(id).map(
