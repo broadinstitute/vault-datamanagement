@@ -3,7 +3,8 @@ package org.broadinstitute.dsde.vault.datamanagement.services
 import javax.ws.rs.Path
 
 import com.wordnik.swagger.annotations._
-import org.broadinstitute.dsde.vault.common.openam.OpenAMDirectives._
+import org.broadinstitute.dsde.vault.common.directives.OpenAMDirectives._
+import org.broadinstitute.dsde.vault.common.directives.VersioningDirectives._
 import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
 import org.broadinstitute.dsde.vault.datamanagement.model.Analysis
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
@@ -15,6 +16,11 @@ import spray.routing._
 @Api(value = "/analyses", description = "Analysis Service", produces = "application/json")
 trait AnalysisService extends HttpService {
 
+  private implicit val ec = actorRefFactory.dispatcher
+
+  private final val ApiPrefix = "analyses"
+  private final val ApiVersions = "v1"
+
   val routes = describeRoute ~ ingestRoute ~ completeRoute
 
   @ApiOperation(value = "Describes an Analysis's metadata and associated files.",
@@ -25,6 +31,7 @@ trait AnalysisService extends HttpService {
     notes = ""
   )
   @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "version", required = true, dataType = "string", paramType = "path", value = "API version", allowableValues = ApiVersions),
     new ApiImplicitParam(name = "id", required = true, dataType = "string", paramType = "path", value = "Analysis Vault ID")
   ))
   @ApiResponses(Array(
@@ -33,12 +40,15 @@ trait AnalysisService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def describeRoute = {
-    path("analyses" / Segment) { id =>
+    pathVersion(ApiPrefix, Segment) { (version, id) =>
       get {
         rejectEmptyResponse {
           respondWithMediaType(`application/json`) {
             complete {
-              DataManagementController.getAnalysis(id).map(_.toJson.prettyPrint)
+              version match {
+                case _ =>
+                  DataManagementController.getAnalysis(id).map(_.toJson.prettyPrint)
+              }
             }
           }
         }
@@ -50,6 +60,7 @@ trait AnalysisService extends HttpService {
     produces = "application/json", consumes = "application/json", response = classOf[Analysis],
     notes = "Accepts a json packet as POST. Creates a Vault object with the supplied metadata.")
   @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "version", required = true, dataType = "string", paramType = "path", value = "API version", allowableValues = ApiVersions),
     new ApiImplicitParam(name = "body", required = true, dataType = "org.broadinstitute.dsde.vault.datamanagement.model.Analysis", paramType = "body", value = "Analysis to create")
   ))
   @ApiResponses(Array(
@@ -58,13 +69,16 @@ trait AnalysisService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def ingestRoute = {
-    path("analyses") {
+    pathVersion(ApiPrefix) { version =>
       post {
-        commonNameFromCookie { commonName =>
+        commonNameFromCookie() { commonName =>
           entity(as[Analysis]) { analysis =>
             respondWithMediaType(`application/json`) {
               complete {
-                DataManagementController.createAnalysis(analysis, commonName).toJson.prettyPrint
+                version match {
+                  case _ =>
+                    DataManagementController.createAnalysis(analysis, commonName).toJson.prettyPrint
+                }
               }
             }
           }
@@ -78,6 +92,7 @@ trait AnalysisService extends HttpService {
     produces = "application/json", consumes = "application/json", response = classOf[Analysis],
     notes = "Accepts a json packet as POST. Updates a Vault object with the supplied files.")
   @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "version", required = true, dataType = "string", paramType = "path", value = "API version", allowableValues = ApiVersions),
     new ApiImplicitParam(name = "id", required = true, dataType = "string", paramType = "path", value = "Analysis Vault ID"),
     new ApiImplicitParam(name = "body", required = true, dataType = "org.broadinstitute.dsde.vault.datamanagement.model.Analysis", paramType = "body", value = "Analysis to update")
   ))
@@ -86,13 +101,16 @@ trait AnalysisService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def completeRoute = {
-    path("analyses" / Segment / "outputs") { id =>
+    pathVersion(ApiPrefix, Segment / "outputs") { (version, id) =>
       post {
-        commonNameFromCookie { commonName =>
+        commonNameFromCookie() { commonName =>
           entity(as[Analysis]) { analysis =>
             respondWithMediaType(`application/json`) {
               complete {
-                DataManagementController.completeAnalysis(id, analysis.files.get, commonName).toJson.prettyPrint
+                version match {
+                  case _ =>
+                    DataManagementController.completeAnalysis(id, analysis.files.get, commonName).toJson.prettyPrint
+                }
               }
             }
           }

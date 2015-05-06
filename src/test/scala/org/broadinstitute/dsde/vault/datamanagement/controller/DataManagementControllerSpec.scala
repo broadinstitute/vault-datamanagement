@@ -3,9 +3,6 @@ package org.broadinstitute.dsde.vault.datamanagement.controller
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
 
 class DataManagementControllerSpec extends DataManagementDatabaseFreeSpec {
-
-  def actorRefFactory = system
-
   "DataManagementController" - {
     "should insert and retrieve an attribute" in {
       val da = DataManagementController.dataAccess
