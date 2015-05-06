@@ -45,4 +45,3 @@ class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBam
     }
   }
 }
-

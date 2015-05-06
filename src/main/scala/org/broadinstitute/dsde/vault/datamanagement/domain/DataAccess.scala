@@ -139,7 +139,8 @@ class DataAccess(val driver: JdbcProfile)
      //Retrieve the relation where our "entityGUID" parameter is the entity1GUID
      relation <- relations
      if relation.entity1GUID === entityGUID
-     // Using the foreign key, filter for the Relation.relation.entityType === INPUT_TYPE.entityType
+
+     // Using the foreign key, filter for the Relation.relation.entityType === MEMBER_TYPE.entityType
      typeEntity <- relation.relation
      if typeEntity.entityType === MEMBER_TYPE.entityType
 

@@ -10,7 +10,7 @@ import spray.httpx.SprayJsonSupport._
 import spray.json._
 import spray.routing._
 
-@Api(value = "/collections", description = "uBAM Collection Service", produces = "application/json")
+@Api(value = "/ubamcollections", description = "uBAM Collection Service", produces = "application/json")
 trait UBamCollectionService extends HttpService {
 
   private implicit val ec = actorRefFactory.dispatcher
@@ -37,7 +37,7 @@ trait UBamCollectionService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def ingestRoute = {
-    path("collections" / "v" ~ IntNumber) { version =>
+    path("ubamcollections" / "v" ~ IntNumber) { version =>
       post {
         commonNameFromCookie() { commonName =>
           entity(as[UBamCollection]) { uBAMCollection =>
@@ -73,7 +73,7 @@ trait UBamCollectionService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def describeRoute = {
-    path("collections" / "v" ~ IntNumber / Segment) { (version, id) =>
+    path("ubamcollections" / "v" ~ IntNumber / Segment) { (version, id) =>
       get {
         rejectEmptyResponse {
           respondWithMediaType(`application/json`) {
