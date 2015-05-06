@@ -78,7 +78,7 @@ object DataManagementController {
     database withTransaction {
       implicit session =>
         val entity = dataAccess.insertEntity(EntityType.UBAM_COLLECTION.databaseKey, createdBy)
-        dataAccess.addMetadata(entity.guid.get, collection.metadata)
+        dataAccess.addMetadata(entity.guid.get, collection.metadata.get)
         dataAccess.addMembers(entity.guid.get, createdBy, collection.members.get)
         collection.copy(id = entity.guid)
     }
@@ -91,7 +91,7 @@ object DataManagementController {
          entity => {
            val members = dataAccess.getMembers(entity.guid.get)
            val metadata = dataAccess.getMetadata(entity.guid.get)
-           UBamCollection(Option(members), metadata, entity.guid)
+           UBamCollection(Option(members), Option(metadata), entity.guid)
          }
        )
    }
