@@ -10,28 +10,39 @@ import spray.httpx.SprayJsonSupport._
 class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBamCollectionService {
 
   def actorRefFactory = system
+  val pathBase = "/collections"
 
   "UBamCollectionService" - {
     "when accessing the /collections path" - {
-      //val members = Some(List("Ubam_id_1", "Ubam_id_2", "Ubam_id_3").toSeq)
-      val metadata = Map("key1" -> "someKey", "key2" -> "otherKey", "key3" -> "anotherKey")
+
+      val metadata = Option(Map("key1" -> "someKey", "key2" -> "otherKey", "key3" -> "anotherKey"))
 
       val members = Option((
         for (x <- 1 to 3) yield
         DataManagementController.createUnmappedBAM(UnmappedBAM(Map.empty, Map.empty), "UBamCollectionServiceSpec").id.get
         ).sorted.toSeq)
 
+      var createdId: Option[String] = None
+
       "POST should store a new Collection" in {
-        Post( "/collections", UBamCollection(members, metadata)) ~> OpenAMSession ~> ingestRoute ~> check {
+        Post( pathBase , UBamCollection(members, metadata)) ~> OpenAMSession ~> ingestRoute ~> check {
           val collection = responseAs[UBamCollection]
           collection.metadata should be(metadata)
           collection.members should be(members)
+          createdId = collection.id
         }
       }
+      "GET should retrieve the previously stored Collection" in {
+        assume(createdId.isDefined)
+        Get(pathBase+"/"+createdId.get) ~> OpenAMSession ~> describeRoute ~> check {
+          val collection = responseAs[UBamCollection]
+          collection.metadata should be(metadata)
+          collection.members should be(members)
+          collection.id should be(createdId)
+        }
+      }
+
     }
   }
-
-
-/*  override def afterAll(): Unit = {
-  }*/
 }
+
