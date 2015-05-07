@@ -37,7 +37,7 @@ class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBam
         Get(pathBase+"/"+createdId.get) ~> OpenAMSession ~> describeRoute ~> check {
           val collection = responseAs[UBamCollection]
           collection.metadata should be(metadata)
-          collection.members should be(members)
+          collection.members.map(_.sorted) should be(members)
           collection.id should be(createdId)
         }
       }
