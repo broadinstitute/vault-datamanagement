@@ -1,7 +1,8 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
 import com.wordnik.swagger.annotations._
-import org.broadinstitute.dsde.vault.common.openam.OpenAMDirectives._
+import org.broadinstitute.dsde.vault.common.directives.OpenAMDirectives._
+import org.broadinstitute.dsde.vault.common.directives.VersioningDirectives._
 import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
 import org.broadinstitute.dsde.vault.datamanagement.model.UnmappedBAM
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
@@ -13,6 +14,11 @@ import spray.routing._
 @Api(value = "/ubams", description = "uBAM Service", produces = "application/json")
 trait UnmappedBAMService extends HttpService {
 
+  private implicit val ec = actorRefFactory.dispatcher
+
+  private final val ApiPrefix = "ubams"
+  private final val ApiVersions = "v1"
+
   val routes = describeRoute ~ ingestRoute
 
   @ApiOperation(value = "Describes a uBAM's metadata and associated files.",
@@ -23,6 +29,7 @@ trait UnmappedBAMService extends HttpService {
     notes = "Supports arbitrary metadata keys, but this is not represented well in Swagger (see the 'additionalMetadata' note below)"
   )
   @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "version", required = true, dataType = "string", paramType = "path", value = "API version", allowableValues = ApiVersions),
     new ApiImplicitParam(name = "id", required = true, dataType = "string", paramType = "path", value = "uBAM Vault ID")
   ))
   @ApiResponses(Array(
@@ -31,12 +38,15 @@ trait UnmappedBAMService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def describeRoute = {
-    path("ubams" / Segment) { id =>
+    pathVersion(ApiPrefix, Segment) { (version, id) =>
       get {
         rejectEmptyResponse {
           respondWithMediaType(`application/json`) {
             complete {
-              DataManagementController.getUnmappedBAM(id).map(_.toJson.prettyPrint)
+              version match {
+                case _ =>
+                  DataManagementController.getUnmappedBAM(id).map(_.toJson.prettyPrint)
+              }
             }
           }
         }
@@ -48,6 +58,7 @@ trait UnmappedBAMService extends HttpService {
     produces = "application/json", consumes = "application/json", response = classOf[UnmappedBAM],
     notes = "Accepts a json packet as POST. Creates a Vault object with the supplied metadata.")
   @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "version", required = true, dataType = "string", paramType = "path", value = "API version", allowableValues = ApiVersions),
     new ApiImplicitParam(name = "body", required = true, dataType = "org.broadinstitute.dsde.vault.datamanagement.model.UnmappedBAM", paramType = "body", value = "uBAM to create")
   ))
   @ApiResponses(Array(
@@ -55,13 +66,16 @@ trait UnmappedBAMService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def ingestRoute = {
-    path("ubams") {
+    pathVersion(ApiPrefix) { version =>
       post {
-        commonNameFromCookie { commonName =>
+        commonNameFromCookie() { commonName =>
           entity(as[UnmappedBAM]) { unmappedBAM =>
             respondWithMediaType(`application/json`) {
               complete {
-                DataManagementController.createUnmappedBAM(unmappedBAM, commonName).toJson.prettyPrint
+                version match {
+                  case _ =>
+                    DataManagementController.createUnmappedBAM(unmappedBAM, commonName).toJson.prettyPrint
+                }
               }
             }
           }
@@ -69,5 +83,4 @@ trait UnmappedBAMService extends HttpService {
       }
     }
   }
-
 }
