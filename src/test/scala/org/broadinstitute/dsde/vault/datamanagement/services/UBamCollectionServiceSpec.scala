@@ -10,10 +10,10 @@ import spray.httpx.SprayJsonSupport._
 class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBamCollectionService {
 
   def actorRefFactory = system
-  val pathBase = "/collections"
+  val pathBase = "/collections/v1"
 
   "UBamCollectionService" - {
-    "when accessing the /collections path" - {
+    "when accessing the /collections/v1 path" - {
 
       val metadata = Option(Map("key1" -> "someKey", "key2" -> "otherKey", "key3" -> "anotherKey"))
 
