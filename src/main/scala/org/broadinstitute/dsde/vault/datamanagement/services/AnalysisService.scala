@@ -87,7 +87,7 @@ trait AnalysisService extends HttpService {
     }
   }
 
-  @Path("/{id}/outputs")
+  @Path("/{version}/{id}/outputs")
   @ApiOperation(value = "Complete Analysis", nickname = "analysis_complete", httpMethod = "POST",
     produces = "application/json", consumes = "application/json", response = classOf[Analysis],
     notes = "Accepts a json packet as POST. Updates a Vault object with the supplied files.")
