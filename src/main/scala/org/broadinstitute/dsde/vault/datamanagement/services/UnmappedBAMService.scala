@@ -17,7 +17,7 @@ trait UnmappedBAMService extends HttpService {
   private implicit val ec = actorRefFactory.dispatcher
 
   private final val ApiPrefix = "ubams"
-  private final val ApiVersions = "v1"
+  private final val ApiVersions = "v1,v2"
 
   val routes = describeRoute ~ ingestRoute
 
@@ -43,10 +43,7 @@ trait UnmappedBAMService extends HttpService {
         rejectEmptyResponse {
           respondWithMediaType(`application/json`) {
             complete {
-              version match {
-                case _ =>
-                  DataManagementController.getUnmappedBAM(id).map(_.toJson.prettyPrint)
-              }
+              DataManagementController.getUnmappedBAM(id, version).map(_.toJson.prettyPrint)
             }
           }
         }
@@ -72,10 +69,7 @@ trait UnmappedBAMService extends HttpService {
           entity(as[UnmappedBAM]) { unmappedBAM =>
             respondWithMediaType(`application/json`) {
               complete {
-                version match {
-                  case _ =>
-                    DataManagementController.createUnmappedBAM(unmappedBAM, commonName).toJson.prettyPrint
-                }
+                DataManagementController.createUnmappedBAM(unmappedBAM, commonName, version).toJson.prettyPrint
               }
             }
           }

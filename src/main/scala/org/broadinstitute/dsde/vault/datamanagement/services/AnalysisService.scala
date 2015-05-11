@@ -19,7 +19,7 @@ trait AnalysisService extends HttpService {
   private implicit val ec = actorRefFactory.dispatcher
 
   private final val ApiPrefix = "analyses"
-  private final val ApiVersions = "v1"
+  private final val ApiVersions = "v1,v2"
 
   val routes = describeRoute ~ ingestRoute ~ completeRoute
 
@@ -45,10 +45,7 @@ trait AnalysisService extends HttpService {
         rejectEmptyResponse {
           respondWithMediaType(`application/json`) {
             complete {
-              version match {
-                case _ =>
-                  DataManagementController.getAnalysis(id).map(_.toJson.prettyPrint)
-              }
+              DataManagementController.getAnalysis(id, version).map(_.toJson.prettyPrint)
             }
           }
         }
@@ -75,10 +72,7 @@ trait AnalysisService extends HttpService {
           entity(as[Analysis]) { analysis =>
             respondWithMediaType(`application/json`) {
               complete {
-                version match {
-                  case _ =>
-                    DataManagementController.createAnalysis(analysis, commonName).toJson.prettyPrint
-                }
+                DataManagementController.createAnalysis(analysis, commonName, version).toJson.prettyPrint
               }
             }
           }
@@ -107,10 +101,7 @@ trait AnalysisService extends HttpService {
           entity(as[Analysis]) { analysis =>
             respondWithMediaType(`application/json`) {
               complete {
-                version match {
-                  case _ =>
-                    DataManagementController.completeAnalysis(id, analysis.files.get, commonName).toJson.prettyPrint
-                }
+                DataManagementController.completeAnalysis(id, analysis.files.get, commonName, version).toJson.prettyPrint
               }
             }
           }
