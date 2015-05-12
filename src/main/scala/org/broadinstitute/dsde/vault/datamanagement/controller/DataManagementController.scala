@@ -75,7 +75,7 @@ object DataManagementController {
   }
   // ================= UBam Collections methods =================
 
-  def createUBAMCollection(collection: UBamCollection, createdBy: String): UBamCollection ={
+  def createUBAMCollection(collection: UBamCollection, createdBy: String): UBamCollection = {
     database withTransaction {
       implicit session =>
         val entity = dataAccess.insertEntity(EntityType.UBAM_COLLECTION.databaseKey, createdBy)
@@ -85,18 +85,18 @@ object DataManagementController {
     }
   }
 
- def getUBAMCollection(id: String): Option[UBamCollection] = {
-   database withTransaction {
-     implicit session =>
-       dataAccess.getEntity(id).map(
-         entity => {
-           val members = dataAccess.getMembers(entity.guid.get)
-           val metadata = dataAccess.getMetadata(entity.guid.get)
-           UBamCollection(Option(members), Option(metadata), Option(getProperties(entity)), entity.guid)
-         }
-       )
-   }
- }
+  def getUBAMCollection(id: String): Option[UBamCollection] = {
+    database withTransaction {
+      implicit session =>
+        dataAccess.getEntity(id).map(
+          entity => {
+            val members = dataAccess.getMembers(entity.guid.get)
+            val metadata = dataAccess.getMetadata(entity.guid.get)
+            UBamCollection(Option(members), Option(metadata), Option(getProperties(entity)), entity.guid)
+          }
+        )
+    }
+  }
 
 
   // ==================== common utility methods ====================
