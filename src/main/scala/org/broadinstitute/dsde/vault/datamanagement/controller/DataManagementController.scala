@@ -44,6 +44,20 @@ object DataManagementController {
     }
   }
 
+  def getUnmappedBAMList( version: Option[Int]): List[UnmappedBAM] = {
+    database withTransaction {
+      implicit session =>
+        dataAccess.getEntityList().map(
+          entity => {
+            val files = dataAccess.getFiles(entity.guid.get)
+            val metadata = dataAccess.getMetadata(entity.guid.get)
+            val properties = getProperties(entity, version)
+            UnmappedBAM(files, metadata, properties, entity.guid)
+          }
+        )
+    }
+  }
+
   // ==================== analyses ====================
   def createAnalysis(analysis: Analysis, createdBy: String, version: Option[Int]): Analysis = {
     database withTransaction {
