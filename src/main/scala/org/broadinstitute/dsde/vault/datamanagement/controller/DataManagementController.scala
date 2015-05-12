@@ -81,7 +81,7 @@ object DataManagementController {
         val entity = dataAccess.insertEntity(EntityType.UBAM_COLLECTION.databaseKey, createdBy)
         dataAccess.addMetadata(entity.guid.get, collection.metadata.get)
         dataAccess.addMembers(entity.guid.get, createdBy, collection.members.get)
-        collection.copy(id = entity.guid)
+        collection.copy(properties = Option(getProperties(entity)), id = entity.guid)
     }
   }
 
@@ -92,7 +92,7 @@ object DataManagementController {
          entity => {
            val members = dataAccess.getMembers(entity.guid.get)
            val metadata = dataAccess.getMetadata(entity.guid.get)
-           UBamCollection(Option(members), Option(metadata), entity.guid)
+           UBamCollection(Option(members), Option(metadata), Option(getProperties(entity)), entity.guid)
          }
        )
    }
@@ -110,15 +110,18 @@ object DataManagementController {
       }
     )
   }
-  
+
+  private def getProperties(entity: Entity): Map[String, String] = {
+    import org.broadinstitute.dsde.vault.datamanagement.model.Properties._
+    val pairs = List((CreatedBy, Option(entity.createdBy)),
+      (CreatedDate, entity.createdDate.map(_.getTime.toString)),
+      (ModifiedBy, entity.modifiedBy),
+      (ModifiedDate, entity.modifiedDate.map(_.getTime.toString)))
+    pairs.filter(_._2.isDefined).map(p => (p._1, p._2.get)).toMap
+  }
+
   private def getProperties(entity: Entity, version: Option[Int]): Option[Map[String, String]] = version match {
-    case Some(x) if x > 1 =>
-      import org.broadinstitute.dsde.vault.datamanagement.model.Properties._
-      val pairs = List((CreatedBy, Option(entity.createdBy)),
-        (CreatedDate, entity.createdDate.map(_.getTime.toString)),
-        (ModifiedBy, entity.modifiedBy),
-        (ModifiedDate, entity.modifiedDate.map(_.getTime.toString)))
-      Option(pairs.filter(_._2.isDefined).map(p => (p._1, p._2.get)).toMap)
+    case Some(x) if x > 1 => Option(getProperties(entity))
     case _ => None
   }
 
