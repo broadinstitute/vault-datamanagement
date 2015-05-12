@@ -65,4 +65,8 @@ trait EntityComponent {
   def getEntity(guid: String)(implicit session: Session): Option[Entity] = {
     entitiesByGUID(guid).firstOption
   }
+
+  def getEntityList()(implicit session: Session): List[Entity] = {
+    entities.list
+  }
 }

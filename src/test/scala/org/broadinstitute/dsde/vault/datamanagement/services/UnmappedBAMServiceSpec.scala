@@ -7,7 +7,7 @@ import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
 import spray.http.StatusCodes._
 import spray.httpx.SprayJsonSupport._
 
-class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with UnmappedBAMService {
+class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with UnmappedBAMService   {
 
   "UnmappedBAMService" - {
 
@@ -45,7 +45,6 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
             }
           }
         }
-
         "GET should retrieve the previously stored unmapped BAM" in {
           assume(createdId.isDefined)
 
@@ -71,8 +70,19 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
             status should be(NotFound)
           }
         }
+        "GET should retrieve a list of " in {
+          if (version.isDefined) {
+            Get(s"$pathBase") ~> openAMSession ~> describeRouteList ~> check {
+                status should be(OK)
+             }
+           } else {
+            Get(s"$pathBase") ~> openAMSession ~>sealRoute(describeRouteList) ~> check {
+              status should be(NotFound)
+            }
+          }
+        }
       }
-
     }
   }
+
 }
