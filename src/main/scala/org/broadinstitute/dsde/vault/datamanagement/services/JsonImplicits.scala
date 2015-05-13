@@ -1,6 +1,10 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
 import org.broadinstitute.dsde.vault.datamanagement.model._
+import org.broadinstitute.dsde.vault.datamanagement.model.GenericEntityIngest
+import org.broadinstitute.dsde.vault.datamanagement.model.GenericRelationshipIngest
+import org.broadinstitute.dsde.vault.datamanagement.model.GenericIngest
+
 import spray.json.DefaultJsonProtocol
 
 object JsonImplicits extends DefaultJsonProtocol {
@@ -9,4 +13,12 @@ object JsonImplicits extends DefaultJsonProtocol {
   implicit val impAnalysis = jsonFormat5(Analysis)
   implicit val impBAMCollection = jsonFormat4(UBamCollection)
   implicit val impEntitySearchResult = jsonFormat2(EntitySearchResult)
+  implicit val impGenericSysAttrs = jsonFormat5(GenericSysAttrs)
+  implicit val impGenericEntity = jsonFormat4(GenericEntity)
+  implicit val impGenericRelationship = jsonFormat2(GenericRelationship)
+  implicit val impGenericRelEnt = jsonFormat2(GenericRelEnt)
+  implicit val impGenericEntityIngest = jsonFormat3(GenericEntityIngest)
+  implicit val impGenericRelationshipIngest = jsonFormat4(GenericRelationshipIngest)
+  implicit val impGenericIngest = jsonFormat2(GenericIngest)
+  implicit val impGenericQuery = jsonFormat3(GenericQuery)
 }

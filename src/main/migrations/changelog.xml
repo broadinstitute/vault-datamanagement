@@ -97,4 +97,6 @@
         </createIndex>
     </changeSet>
 
+    <include file="changesets/addBossIDToEntity.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>
