@@ -3,7 +3,7 @@ package org.broadinstitute.dsde.vault.datamanagement.services
 import com.wordnik.swagger.annotations._
 import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
 import org.broadinstitute.dsde.vault.common.directives.OpenAMDirectives._
-import org.broadinstitute.dsde.vault.datamanagement.model.{UBamCollection}
+import org.broadinstitute.dsde.vault.datamanagement.model.UBamCollection
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
 import spray.http.MediaTypes._
 import spray.httpx.SprayJsonSupport._
@@ -78,10 +78,7 @@ trait UBamCollectionService extends HttpService {
         rejectEmptyResponse {
           respondWithMediaType(`application/json`) {
             complete {
-              version match {
-                case _ =>
-                  DataManagementController.getUBAMCollection(id, version).map(_.toJson.prettyPrint)
-              }
+              DataManagementController.getUBAMCollection(id).map(_.toJson.prettyPrint)
             }
           }
         }

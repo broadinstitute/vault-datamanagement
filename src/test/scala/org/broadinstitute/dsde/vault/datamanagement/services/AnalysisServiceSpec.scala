@@ -32,7 +32,7 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
         // this test relies on adding relations to pre-existing ubams. Create those ubams first!
         val input = Option((
           for (x <- 1 to 3) yield
-          DataManagementController.createUnmappedBAM(UnmappedBAM(Map.empty, Map.empty), "AnalysisServiceSpec", version).id.get
+          DataManagementController.createUnmappedBAM(UnmappedBAM(Map.empty, Map.empty), "AnalysisServiceSpec", includeProperties = true).id.get
           ).sorted.toSeq)
 
         "POST should store a new Analysis" in {
@@ -47,12 +47,11 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
             createdId = analysis.id
 
             version match {
-              case Some(x) if x > 1 => {
+              case Some(x) if x > 1 =>
                 analysis.properties shouldNot be(empty)
                 analysis.properties.get.get(CreatedBy) shouldNot be(empty)
                 analysis.properties.get.get(CreatedDate) shouldNot be(empty)
                 properties = analysis.properties
-              }
               case _ => analysis.properties should be(empty)
             }
           }
@@ -122,7 +121,7 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
 
         "POST of an Analysis object completion with files should update an Analysis" in {
           val analysisCreated = DataManagementController.createAnalysis(
-            Analysis(input, metadata, files), "userCreate", version)
+            Analysis(input, metadata, files), "userCreate", includeProperties = true)
 
           val completedFiles = Option(Map(
             "vcf" -> "gcs://path/to/vcf",
@@ -146,12 +145,11 @@ class AnalysisServiceSpec extends DataManagementDatabaseFreeSpec with AnalysisSe
             analysis.id shouldNot be(empty)
 
             version match {
-              case Some(x) if x > 1 => {
+              case Some(x) if x > 1 =>
                 analysis.properties.get(CreatedBy) shouldNot be(empty)
                 analysis.properties.get(CreatedDate) shouldNot be(empty)
                 analysis.properties.get(ModifiedBy) shouldNot be(empty)
                 analysis.properties.get(ModifiedDate) shouldNot be(empty)
-              }
               case _ => analysis.properties should be(empty)
             }
           }

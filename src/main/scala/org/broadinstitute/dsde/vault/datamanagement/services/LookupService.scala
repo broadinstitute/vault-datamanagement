@@ -35,16 +35,13 @@ trait LookupService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def lookupEntityByTypeAttributeNameValueRoute = {
-    pathVersion(ApiPrefix, Segment / Segment / Segment) { (version, entityType, attributeName, attributeValue) =>
+    pathVersion(ApiPrefix, 1, Segment / Segment / Segment) { (version, entityType, attributeName, attributeValue) =>
       get {
         rejectEmptyResponse {
           respondWithMediaType(`application/json`) {
             complete {
-              version match {
-                case _ =>
-                  DataManagementController.lookupEntityByEndpointAttribute(
-                    entityType, attributeName, attributeValue).map(_.toJson.prettyPrint)
-              }
+              DataManagementController.lookupEntityByEndpointAttribute(
+                entityType, attributeName, attributeValue).map(_.toJson.prettyPrint)
             }
           }
         }

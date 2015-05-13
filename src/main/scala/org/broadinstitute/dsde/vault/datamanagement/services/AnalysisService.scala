@@ -40,12 +40,12 @@ trait AnalysisService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def describeRoute = {
-    pathVersion(ApiPrefix, Segment) { (version, id) =>
+    pathVersion(ApiPrefix, 1, Segment) { (version, id) =>
       get {
         rejectEmptyResponse {
           respondWithMediaType(`application/json`) {
             complete {
-              DataManagementController.getAnalysis(id, version).map(_.toJson.prettyPrint)
+              DataManagementController.getAnalysis(id, version > 1).map(_.toJson.prettyPrint)
             }
           }
         }
@@ -66,13 +66,13 @@ trait AnalysisService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def ingestRoute = {
-    pathVersion(ApiPrefix) { version =>
+    pathVersion(ApiPrefix, 1) { version =>
       post {
         commonNameFromCookie() { commonName =>
           entity(as[Analysis]) { analysis =>
             respondWithMediaType(`application/json`) {
               complete {
-                DataManagementController.createAnalysis(analysis, commonName, version).toJson.prettyPrint
+                DataManagementController.createAnalysis(analysis, commonName, version > 1).toJson.prettyPrint
               }
             }
           }
@@ -95,13 +95,14 @@ trait AnalysisService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def completeRoute = {
-    pathVersion(ApiPrefix, Segment / "outputs") { (version, id) =>
+    pathVersion(ApiPrefix, 1, Segment / "outputs") { (version, id) =>
       post {
         commonNameFromCookie() { commonName =>
           entity(as[Analysis]) { analysis =>
             respondWithMediaType(`application/json`) {
               complete {
-                DataManagementController.completeAnalysis(id, analysis.files.get, commonName, version).toJson.prettyPrint
+                DataManagementController.completeAnalysis(
+                  id, analysis.files.get, commonName, version > 1).toJson.prettyPrint
               }
             }
           }

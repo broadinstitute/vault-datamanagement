@@ -19,9 +19,7 @@ trait UnmappedBAMService extends HttpService {
   private final val ApiPrefix = "ubams"
   private final val ApiVersions = "v1,v2"
 
-
   val routes = describeRoute ~ ingestRoute ~ describeRouteList
-
 
   @ApiOperation(value = "Describes a uBAM's metadata and associated files.",
     nickname = "ubam_describe",
@@ -40,12 +38,12 @@ trait UnmappedBAMService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def describeRoute = {
-    pathVersion(ApiPrefix, Segment) { (version, id) =>
+    pathVersion(ApiPrefix, 1, Segment) { (version, id) =>
       get {
         rejectEmptyResponse {
           respondWithMediaType(`application/json`) {
             complete {
-              DataManagementController.getUnmappedBAM(id, version).map(_.toJson.prettyPrint)
+              DataManagementController.getUnmappedBAM(id, version > 1).map(_.toJson.prettyPrint)
             }
           }
         }
@@ -65,13 +63,13 @@ trait UnmappedBAMService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def ingestRoute = {
-    pathVersion(ApiPrefix) { version =>
+    pathVersion(ApiPrefix, 1) { version =>
       post {
         commonNameFromCookie() { commonName =>
           entity(as[UnmappedBAM]) { unmappedBAM =>
             respondWithMediaType(`application/json`) {
               complete {
-                DataManagementController.createUnmappedBAM(unmappedBAM, commonName, version).toJson.prettyPrint
+                DataManagementController.createUnmappedBAM(unmappedBAM, commonName, version > 1).toJson.prettyPrint
               }
             }
           }
@@ -96,18 +94,17 @@ trait UnmappedBAMService extends HttpService {
     new ApiImplicitParam(name = "version", required = true, dataType = "string", paramType = "path", value = "API version", allowableValues = ApiVersions)
   ))
   def describeRouteList = {
-    path("ubams" / "v" ~ IntNumber) { version => {
+    path("ubams" / "v" ~ IntNumber) { version =>
       get {
         rejectEmptyResponse {
           respondWithMediaType(`application/json`) {
             complete {
-              DataManagementController.getUnmappedBAMList(Option(version)).toJson.prettyPrint
+              DataManagementController.getUnmappedBAMList(version > 1).toJson.prettyPrint
             }
           }
         }
       }
     }
-   }
   }
 
 }

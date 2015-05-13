@@ -144,7 +144,7 @@ class DataAccess(val driver: JdbcProfile)
      typeEntity <- relation.relation
      if typeEntity.entityType === MEMBER_TYPE.entityType
 
-    } yield (relation.entity2GUID))
+    } yield relation.entity2GUID)
 
 
   def getMembers(entityGUID: String)(implicit session: Session): Seq[String] = {

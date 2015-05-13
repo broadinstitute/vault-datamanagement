@@ -25,7 +25,7 @@ class LookupServiceSpec extends DataManagementDatabaseFreeSpec with LookupServic
       s"when accessing the $pathBase/{entityType}/{attributeName}/{attributeValue} path" - {
         val testValue = UUID.randomUUID().toString
         val metadata = Map("sameKey" -> "sameValue", "uniqueTest" -> testValue)
-        val entityGUID = DataManagementController.createUnmappedBAM(UnmappedBAM(Map.empty, metadata), "LookupServiceSpec", Option(1)).id.get
+        val entityGUID = DataManagementController.createUnmappedBAM(UnmappedBAM(Map.empty, metadata), "LookupServiceSpec", includeProperties = true).id.get
 
         "Lookup should return previously stored unmapped BAM" in {
           Get(s"$pathBase/ubam/uniqueTest/$testValue") ~> lookupEntityByTypeAttributeNameValueRoute ~> check {

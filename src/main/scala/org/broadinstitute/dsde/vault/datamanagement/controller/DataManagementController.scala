@@ -15,43 +15,43 @@ object DataManagementController {
   comboPooledDataSource.setJdbcUrl(DatabaseConfig.jdbcUrl)
   comboPooledDataSource.setUser(DatabaseConfig.jdbcUser)
   comboPooledDataSource.setPassword(DatabaseConfig.jdbcPassword)
-  DatabaseConfig.c3p0MaxStatementsOption.map(comboPooledDataSource.setMaxStatements)
+  DatabaseConfig.c3p0MaxStatementsOption.foreach(comboPooledDataSource.setMaxStatements)
 
   def database: Database = Database.forDataSource(comboPooledDataSource)
 
   // ==================== unmapped BAMS ====================
-  def createUnmappedBAM(unmappedBAM: UnmappedBAM, createdBy: String, version: Option[Int]): UnmappedBAM = {
+  def createUnmappedBAM(unmappedBAM: UnmappedBAM, createdBy: String, includeProperties: Boolean): UnmappedBAM = {
     database withTransaction {
       implicit session =>
         val entity = dataAccess.insertEntity(EntityType.UNMAPPED_BAM.databaseKey, createdBy)
         dataAccess.addFiles(entity.guid.get, createdBy, unmappedBAM.files)
         dataAccess.addMetadata(entity.guid.get, unmappedBAM.metadata)
-        unmappedBAM.copy(properties = getProperties(entity, version), id = entity.guid)
+        unmappedBAM.copy(properties = getProperties(entity, includeProperties), id = entity.guid)
     }
   }
 
-  def getUnmappedBAM(id: String, version: Option[Int]): Option[UnmappedBAM] = {
+  def getUnmappedBAM(id: String, includeProperties: Boolean): Option[UnmappedBAM] = {
     database withTransaction {
       implicit session =>
         dataAccess.getEntity(id).map(
           entity => {
             val files = dataAccess.getFiles(entity.guid.get)
             val metadata = dataAccess.getMetadata(entity.guid.get)
-            val properties = getProperties(entity, version)
+            val properties = getProperties(entity, includeProperties)
             UnmappedBAM(files, metadata, properties, entity.guid)
           }
         )
     }
   }
 
-  def getUnmappedBAMList( version: Option[Int]): List[UnmappedBAM] = {
+  def getUnmappedBAMList(includeProperties: Boolean): List[UnmappedBAM] = {
     database withTransaction {
       implicit session =>
         dataAccess.getEntityList().map(
           entity => {
             val files = dataAccess.getFiles(entity.guid.get)
             val metadata = dataAccess.getMetadata(entity.guid.get)
-            val properties = getProperties(entity, version)
+            val properties = getProperties(entity, includeProperties)
             UnmappedBAM(files, metadata, properties, entity.guid)
           }
         )
@@ -59,36 +59,36 @@ object DataManagementController {
   }
 
   // ==================== analyses ====================
-  def createAnalysis(analysis: Analysis, createdBy: String, version: Option[Int]): Analysis = {
+  def createAnalysis(analysis: Analysis, createdBy: String, includeProperties: Boolean): Analysis = {
     database withTransaction {
       implicit session =>
         val entity = dataAccess.insertEntity(EntityType.ANALYSIS.databaseKey, createdBy)
         dataAccess.addInputs(entity.guid.get, createdBy, analysis.input.get)
         // in the main Apollo use case, files will always be empty, so the following line is a no-op.
         // leaving it here in case the use case changes in the future.
-        analysis.files map { files => dataAccess.addFiles(entity.guid.get, createdBy, files)}
+        analysis.files foreach { files => dataAccess.addFiles(entity.guid.get, createdBy, files) }
         dataAccess.addMetadata(entity.guid.get, analysis.metadata.get)
-        analysis.copy(properties = getProperties(entity, version), id = entity.guid)
+        analysis.copy(properties = getProperties(entity, includeProperties), id = entity.guid)
     }
   }
 
-  def getAnalysis(id: String, version: Option[Int]): Option[Analysis] = {
+  def getAnalysis(id: String, includeProperties: Boolean): Option[Analysis] = {
     database withTransaction {
       implicit session =>
-        getAnalysisWithSession(id, version)
+        getAnalysisWithSession(id, includeProperties)
     }
   }
 
-  def completeAnalysis(id: String, files: Map[String, String], updatedBy: String, version: Option[Int]): Option[Analysis] = {
+  def completeAnalysis(id: String, files: Map[String, String], updatedBy: String, includeProperties: Boolean): Option[Analysis] = {
     database withTransaction {
       implicit session =>
         dataAccess.updateEntity(id, updatedBy)
         dataAccess.addFiles(id, updatedBy, files)
-        getAnalysisWithSession(id, version)
+        getAnalysisWithSession(id, includeProperties)
     }
   }
-  // ================= UBam Collections methods =================
 
+  // ================= UBam Collections methods =================
   def createUBAMCollection(collection: UBamCollection, createdBy: String, version: Int): UBamCollection ={
     database withTransaction {
       implicit session =>
@@ -99,28 +99,27 @@ object DataManagementController {
     }
   }
 
- def getUBAMCollection(id: String, version: Int): Option[UBamCollection] = {
-   database withTransaction {
-     implicit session =>
-       dataAccess.getEntity(id).map(
-         entity => {
-           val members = dataAccess.getMembers(entity.guid.get)
-           val metadata = dataAccess.getMetadata(entity.guid.get)
-           UBamCollection(Option(members), Option(metadata), Option(getProperties(entity)), entity.guid)
-         }
-       )
-   }
- }
-
+  def getUBAMCollection(id: String): Option[UBamCollection] = {
+    database withTransaction {
+      implicit session =>
+        dataAccess.getEntity(id).map(
+          entity => {
+            val members = dataAccess.getMembers(entity.guid.get)
+            val metadata = dataAccess.getMetadata(entity.guid.get)
+            UBamCollection(Option(members), Option(metadata), Option(getProperties(entity)), entity.guid)
+          }
+        )
+    }
+  }
 
   // ==================== common utility methods ====================
-  private def getAnalysisWithSession(id: String, version: Option[Int])(implicit session: Session): Option[Analysis] = {
+  private def getAnalysisWithSession(id: String, includeProperties: Boolean)(implicit session: Session): Option[Analysis] = {
     dataAccess.getEntity(id).map(
       entity => {
         val input = dataAccess.getInputs(entity.guid.get)
         val files = dataAccess.getFiles(entity.guid.get)
         val metadata = dataAccess.getMetadata(entity.guid.get)
-        Analysis(Option(input), Option(metadata), Option(files), getProperties(entity, version), entity.guid)
+        Analysis(Option(input), Option(metadata), Option(files), getProperties(entity, includeProperties), entity.guid)
       }
     )
   }
@@ -134,22 +133,10 @@ object DataManagementController {
     pairs.filter(_._2.isDefined).map(p => (p._1, p._2.get)).toMap
   }
 
-  private def getProperties(entity: Entity, version: Option[Int]):
-  Option[Map[String, String]] = version match {
-    case Some(x) if x > 1 => Option(getProperties(entity))
-    case _ => None
-  }
-
-  // ==================== test methods ====================
-  def getEntity(id: String) = {
-    database withTransaction {
-      implicit session =>
-        dataAccess.getEntity(id)
-    }
-  }
+  private def getProperties(entity: Entity, includeProperties: Boolean): Option[Map[String, String]] =
+    if (includeProperties) Option(getProperties(entity)) else None
 
   // ==================== lookup service ====================
-
   def lookupEntityByEndpointAttribute
   (endpoint: String, attributeName: String, attributeValue: String): Option[EntitySearchResult] = {
     database withTransaction {
@@ -164,4 +151,11 @@ object DataManagementController {
     }
   }
 
+  // ==================== test methods ====================
+  def getEntity(id: String) = {
+    database withTransaction {
+      implicit session =>
+        dataAccess.getEntity(id)
+    }
+  }
 }
