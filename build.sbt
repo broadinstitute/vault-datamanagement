@@ -41,7 +41,7 @@ libraryDependencies ++= {
   val akkaV = "2.3.6"
   val sprayV = "1.3.2"
   Seq(
-    vaultOrg %% "vault-common" % "0.1-15-bf74315"
+    vaultOrg %% "vault-common" % "0.1-17-0ee4ad5"
     , "io.spray" %% "spray-can" % sprayV
     , "io.spray" %% "spray-routing" % sprayV
     , "io.spray" %% "spray-json" % "1.3.1"
@@ -73,7 +73,6 @@ excludeFilter in(Test, unmanagedResources) := HiddenFileFilter
 
 // Make the application.conf available to revolver
 javaOptions in Revolver.reStart += "-Dconfig.file=src/main/resources/application.conf"
-
 // Copy over various properties
 val copyProperties = Seq("openam.deploymentUri")
 
@@ -81,3 +80,4 @@ javaOptions in Revolver.reStart ++= new scala.sys.SystemProperties()
   .filterKeys(key => copyProperties.contains(key) || copyProperties.exists(prefix => key.startsWith(prefix + ".")))
   .map { case (key, value) => s"-D$key=$value" }
   .toSeq
+

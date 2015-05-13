@@ -1,24 +1,17 @@
 package org.broadinstitute.dsde.vault.datamanagement
 
 import akka.actor.{ActorSystem, Props}
-import akka.io.IO
-import akka.pattern.ask
-import akka.util.Timeout
-import spray.can.Http
+import scala.concurrent.duration.{FiniteDuration,SECONDS}
+import org.broadinstitute.dsde.vault.common.util.ServerInitializer
 
-import scala.concurrent.duration._
 
 object DataManagementApp extends App {
 
   // we need an ActorSystem to host our application in
   implicit val system = ActorSystem("vault-datamanagement")
-
-  // create and start our service actor
-  val service = system.actorOf(Props[DataManagementServiceActor], "vault-datamanagement-service")
-
-  implicit val timeout = Timeout(5.seconds)
+  val timeoutDuration = FiniteDuration(DataManagementConfig.HttpConfig.timeoutSeconds,SECONDS)
 
   // start a new HTTP server on configuration port with our service actor as the handler
-  IO(Http) ? Http.Bind(service, DataManagementConfig.HttpConfig.interface, DataManagementConfig.HttpConfig.port)
+  ServerInitializer.startWebServiceActors(Props[DataManagementServiceActor], DataManagementConfig.HttpConfig.interface, DataManagementConfig.HttpConfig.port, timeoutDuration, system)
 
 }
