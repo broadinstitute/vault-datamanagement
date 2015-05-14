@@ -3,6 +3,8 @@ package org.broadinstitute.dsde.vault.datamanagement.domain
 import java.sql.Timestamp
 import java.util.UUID
 
+import org.broadinstitute.dsde.vault.datamanagement.DataManagementConfig
+
 case class Entity
 (
   entityType: String,
@@ -38,6 +40,11 @@ trait EntityComponent {
 
   val entitiesCompiled = Compiled(entities)
 
+  val entitiesPageLimitDefault = DataManagementConfig.DatabaseConfig.entitiesPageLimitDefault
+
+  // http://slick.typesafe.com/doc/2.1.0/queries.html#compiled-queries
+  val entitiesPageLimitCompiled = Compiled((pageLimit: ConstColumn[Long]) => entities.take(pageLimit))
+
   private val entitiesByGUID = Compiled(
     (guid: Column[String]) => for {
       entity <- entities
@@ -66,7 +73,12 @@ trait EntityComponent {
     entitiesByGUID(guid).firstOption
   }
 
-  def getEntityList()(implicit session: Session): List[Entity] = {
-    entities.list
+  def getEntityList(pageLimit: Option[Int])(implicit session: Session): List[Entity] = {
+    if (pageLimit.isDefined || entitiesPageLimitDefault.isDefined) {
+      val limit = pageLimit.getOrElse(entitiesPageLimitDefault.get)
+      entitiesPageLimitCompiled(limit).list
+    } else {
+      entities.list
+    }
   }
 }

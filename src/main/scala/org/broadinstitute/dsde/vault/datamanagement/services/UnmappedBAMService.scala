@@ -19,9 +19,7 @@ trait UnmappedBAMService extends HttpService {
   private final val ApiPrefix = "ubams"
   private final val ApiVersions = "v1,v2"
 
-
   val routes = describeRoute ~ ingestRoute ~ describeRouteList
-
 
   @ApiOperation(value = "Describes a uBAM's metadata and associated files.",
     nickname = "ubam_describe",
@@ -40,12 +38,12 @@ trait UnmappedBAMService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def describeRoute = {
-    pathVersion(ApiPrefix, Segment) { (version, id) =>
+    pathVersion(ApiPrefix, 1, Segment) { (version, id) =>
       get {
         rejectEmptyResponse {
           respondWithMediaType(`application/json`) {
             complete {
-              DataManagementController.getUnmappedBAM(id, version).map(_.toJson.prettyPrint)
+              DataManagementController.getUnmappedBAM(id, version > 1).map(_.toJson.prettyPrint)
             }
           }
         }
@@ -65,13 +63,13 @@ trait UnmappedBAMService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   def ingestRoute = {
-    pathVersion(ApiPrefix) { version =>
+    pathVersion(ApiPrefix, 1) { version =>
       post {
         commonNameFromCookie() { commonName =>
           entity(as[UnmappedBAM]) { unmappedBAM =>
             respondWithMediaType(`application/json`) {
               complete {
-                DataManagementController.createUnmappedBAM(unmappedBAM, commonName, version).toJson.prettyPrint
+                DataManagementController.createUnmappedBAM(unmappedBAM, commonName, version > 1).toJson.prettyPrint
               }
             }
           }
@@ -93,21 +91,27 @@ trait UnmappedBAMService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "version", required = true, dataType = "string", paramType = "path", value = "API version", allowableValues = ApiVersions)
+    new ApiImplicitParam(name = "version", required = true, dataType = "string", paramType = "path", value = "API version", allowableValues = ApiVersions),
+    new ApiImplicitParam(name = "page[limit]", required = false, dataType = "integer", paramType = "query", value = "uBAM limit", allowableValues = "range[0, 2147483647]")
   ))
   def describeRouteList = {
-    path("ubams" / "v" ~ IntNumber) { version => {
+    path("ubams" / "v" ~ IntNumber) { version =>
       get {
-        rejectEmptyResponse {
-          respondWithMediaType(`application/json`) {
-            complete {
-              DataManagementController.getUnmappedBAMList(Option(version)).toJson.prettyPrint
+        // Before full pagination, allow limiting the response size.
+        // `page[limit]` based off http://jsonapi.org/format/#fetching-pagination
+        // In url to be spray (and RFC3986) compliant, must be encoded as `page%5Blimit%5D=123`
+        // Could have also used param name `size` from https://github.com/Jarlakxen/spray-extensions#pagination-support
+        parameter("page[limit]".as[Int].?) { pageLimit =>
+          rejectEmptyResponse {
+            respondWithMediaType(`application/json`) {
+              complete {
+                DataManagementController.getUnmappedBAMList(version > 1, pageLimit).toJson.prettyPrint
+              }
             }
           }
         }
       }
     }
-   }
   }
 
 }

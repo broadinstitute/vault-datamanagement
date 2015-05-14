@@ -18,6 +18,12 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
       Option(2)
     )
 
+    val pageLimits = Table(
+      "pageLimit",
+      0,
+      1
+    )
+
     forAll(versions) { (version: Option[Int]) =>
       val pathBase = "/ubams" + v(version)
 
@@ -36,15 +42,15 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
             createdId = unmappedBAM.id
 
             version match {
-              case Some(x) if x > 1 => {
+              case Some(x) if x > 1 =>
                 unmappedBAM.properties.get(CreatedBy) shouldNot be(empty)
                 unmappedBAM.properties.get(CreatedDate) shouldNot be(empty)
                 properties = unmappedBAM.properties
-              }
               case _ => unmappedBAM.properties should be(empty)
             }
           }
         }
+
         "GET should retrieve the previously stored unmapped BAM" in {
           assume(createdId.isDefined)
 
@@ -55,11 +61,10 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
             unmappedBAM.id should be(createdId)
 
             version match {
-              case Some(x) if x > 1 => {
+              case Some(x) if x > 1 =>
                 unmappedBAM.properties should be(properties)
                 unmappedBAM.properties.get.get(CreatedBy) shouldNot be(empty)
                 unmappedBAM.properties.get.get(CreatedDate) shouldNot be(empty)
-              }
               case _ => unmappedBAM.properties should be(empty)
             }
           }
@@ -70,14 +75,40 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
             status should be(NotFound)
           }
         }
-        "GET should retrieve a list of " in {
+
+        "GET should retrieve a list of unmapped BAMs or a not found error" in {
           if (version.isDefined) {
             Get(s"$pathBase") ~> openAMSession ~> describeRouteList ~> check {
-                status should be(OK)
+              val unmappedBAMs = responseAs[List[UnmappedBAM]]
+              unmappedBAMs shouldNot be(empty)
+              unmappedBAMs.foreach(unmappedBAM => {
+                unmappedBAM.id shouldNot be(empty)
+                version match {
+                  case Some(x) if x > 1 =>
+                    unmappedBAM.properties.get.get(CreatedBy) shouldNot be(empty)
+                    unmappedBAM.properties.get.get(CreatedDate) shouldNot be(empty)
+                  case _ => unmappedBAM.properties should be(empty)
+                }
+              })
              }
            } else {
             Get(s"$pathBase") ~> openAMSession ~>sealRoute(describeRouteList) ~> check {
               status should be(NotFound)
+            }
+          }
+        }
+
+        forAll(pageLimits) { (pageLimit: Int) =>
+          s"GET with ?page[limit]=$pageLimit should retrieve $pageLimit unmapped BAMs or a not found error" in {
+            if (version.isDefined) {
+              Get(s"$pathBase?page[limit]=$pageLimit") ~> openAMSession ~> describeRouteList ~> check {
+                val unmappedBAMs = responseAs[List[UnmappedBAM]]
+                unmappedBAMs should have size pageLimit
+              }
+            } else {
+              Get(s"$pathBase?page[limit]=$pageLimit") ~> openAMSession ~> sealRoute(describeRouteList) ~> check {
+                status should be(NotFound)
+              }
             }
           }
         }

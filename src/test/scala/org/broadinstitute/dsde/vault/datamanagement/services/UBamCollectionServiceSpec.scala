@@ -1,6 +1,5 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
-import org.broadinstitute.dsde.vault.common.openam.OpenAMConfig
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
 import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
 import org.broadinstitute.dsde.vault.datamanagement.model.{UBamCollection, UnmappedBAM}
@@ -10,13 +9,13 @@ import spray.httpx.SprayJsonSupport._
 
 class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBamCollectionService {
 
-
-  val versions = Table(
-    "version",
-    1
-  )
-
   "UBamCollectionService" - {
+
+    val versions = Table(
+      "version",
+      1
+    )
+
     forAll(versions) { (version: Int) =>
       val pathBase = "/ubamcollections/v" + version
 
@@ -26,7 +25,7 @@ class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBam
 
         val members = Option((
           for (x <- 1 to 3) yield
-          DataManagementController.createUnmappedBAM(UnmappedBAM(Map.empty, Map.empty), "UBamCollectionServiceSpec", Some(version)).id.get
+          DataManagementController.createUnmappedBAM(UnmappedBAM(Map.empty, Map.empty), "UBamCollectionServiceSpec", includeProperties = true).id.get
           ).sorted.toSeq)
 
         var createdId: Option[String] = None
