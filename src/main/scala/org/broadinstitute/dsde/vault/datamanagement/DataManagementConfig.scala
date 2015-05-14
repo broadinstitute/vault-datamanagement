@@ -39,6 +39,7 @@ object DataManagementConfig {
     lazy val jdbcUser = ConfigUtil.getStringOrElse(database, "jdbc.user", null)
     lazy val jdbcPassword = ConfigUtil.getStringOrElse(database, "jdbc.password", null)
     lazy val c3p0MaxStatementsOption = ConfigUtil.getIntOption(database, "c3p0.maxStatements")
+    lazy val entitiesPageLimitDefault = ConfigUtil.getIntOption(database, "entities.pageLimitDefault")
   }
 
 }

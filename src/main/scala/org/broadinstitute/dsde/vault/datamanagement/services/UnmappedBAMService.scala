@@ -91,15 +91,22 @@ trait UnmappedBAMService extends HttpService {
     new ApiResponse(code = 500, message = "Vault Internal Error")
   ))
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "version", required = true, dataType = "string", paramType = "path", value = "API version", allowableValues = ApiVersions)
+    new ApiImplicitParam(name = "version", required = true, dataType = "string", paramType = "path", value = "API version", allowableValues = ApiVersions),
+    new ApiImplicitParam(name = "page[limit]", required = false, dataType = "integer", paramType = "query", value = "uBAM limit", allowableValues = "range[0, 2147483647]")
   ))
   def describeRouteList = {
     path("ubams" / "v" ~ IntNumber) { version =>
       get {
-        rejectEmptyResponse {
-          respondWithMediaType(`application/json`) {
-            complete {
-              DataManagementController.getUnmappedBAMList(version > 1).toJson.prettyPrint
+        // Before full pagination, allow limiting the response size.
+        // `page[limit]` based off http://jsonapi.org/format/#fetching-pagination
+        // In url to be spray (and RFC3986) compliant, must be encoded as `page%5Blimit%5D=123`
+        // Could have also used param name `size` from https://github.com/Jarlakxen/spray-extensions#pagination-support
+        parameter("page[limit]".as[Int].?) { pageLimit =>
+          rejectEmptyResponse {
+            respondWithMediaType(`application/json`) {
+              complete {
+                DataManagementController.getUnmappedBAMList(version > 1, pageLimit).toJson.prettyPrint
+              }
             }
           }
         }

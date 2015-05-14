@@ -44,10 +44,10 @@ object DataManagementController {
     }
   }
 
-  def getUnmappedBAMList(includeProperties: Boolean): List[UnmappedBAM] = {
+  def getUnmappedBAMList(includeProperties: Boolean, pageLimit: Option[Int]): List[UnmappedBAM] = {
     database withTransaction {
       implicit session =>
-        dataAccess.getEntityList().map(
+        dataAccess.getEntityList(pageLimit).map(
           entity => {
             val files = dataAccess.getFiles(entity.guid.get)
             val metadata = dataAccess.getMetadata(entity.guid.get)

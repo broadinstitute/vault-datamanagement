@@ -18,6 +18,12 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
       Option(2)
     )
 
+    val pageLimits = Table(
+      "pageLimit",
+      0,
+      1
+    )
+
     forAll(versions) { (version: Option[Int]) =>
       val pathBase = "/ubams" + v(version)
 
@@ -88,6 +94,21 @@ class UnmappedBAMServiceSpec extends DataManagementDatabaseFreeSpec with Unmappe
            } else {
             Get(s"$pathBase") ~> openAMSession ~>sealRoute(describeRouteList) ~> check {
               status should be(NotFound)
+            }
+          }
+        }
+
+        forAll(pageLimits) { (pageLimit: Int) =>
+          s"GET with ?page[limit]=$pageLimit should retrieve $pageLimit unmapped BAMs or a not found error" in {
+            if (version.isDefined) {
+              Get(s"$pathBase?page[limit]=$pageLimit") ~> openAMSession ~> describeRouteList ~> check {
+                val unmappedBAMs = responseAs[List[UnmappedBAM]]
+                unmappedBAMs should have size pageLimit
+              }
+            } else {
+              Get(s"$pathBase?page[limit]=$pageLimit") ~> openAMSession ~> sealRoute(describeRouteList) ~> check {
+                status should be(NotFound)
+              }
             }
           }
         }
