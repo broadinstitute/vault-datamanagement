@@ -10,6 +10,8 @@ object DataManagementConfig {
     private val httpConfig = config.getConfig("http")
     lazy val interface = httpConfig.getString("interface")
     lazy val port = httpConfig.getInt("port")
+    lazy val timeoutSeconds = httpConfig.getLong("timeoutSeconds")
+
   }
 
   //Config Settings
