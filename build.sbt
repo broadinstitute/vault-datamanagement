@@ -73,6 +73,7 @@ excludeFilter in(Test, unmanagedResources) := HiddenFileFilter
 
 // Make the application.conf available to revolver
 javaOptions in Revolver.reStart += "-Dconfig.file=src/main/resources/application.conf"
+
 // Copy over various properties
 val copyProperties = Seq("openam.deploymentUri")
 
@@ -80,4 +81,3 @@ javaOptions in Revolver.reStart ++= new scala.sys.SystemProperties()
   .filterKeys(key => copyProperties.contains(key) || copyProperties.exists(prefix => key.startsWith(prefix + ".")))
   .map { case (key, value) => s"-D$key=$value" }
   .toSeq
-
