@@ -1,8 +1,13 @@
 package org.broadinstitute.dsde.vault.datamanagement.domain
 
+import java.sql.Timestamp
+import java.util.UUID
+
 import org.broadinstitute.dsde.vault.datamanagement.util.Reflection
 import org.broadinstitute.dsde.vault.datamanagement.domain.RelationKeyValue._
+import org.broadinstitute.dsde.vault.datamanagement.model._
 
+import scala.collection.mutable
 import scala.slick.driver.JdbcProfile
 
 class DataAccess(val driver: JdbcProfile)
@@ -185,5 +190,126 @@ class DataAccess(val driver: JdbcProfile)
 
   def lookupEntityByTypeAttribute(entityType: String, attributeName: String, attributeValue: String)(implicit session: Session) = {
     entityByTypeAttribute((entityType, attributeName, attributeValue)).firstOption
+  }
+
+  // query for downstream entities
+  private val kids = Compiled(
+    (guid: Column[String]) =>
+      for {
+        rel <- relations
+        if rel.entity1GUID === guid
+        selfEnt <- rel.relation
+        targetEnt <- rel.entity2 } yield (selfEnt.guid,selfEnt.entityType,targetEnt) )
+
+  private val kidAttrs = Compiled(
+    (guid: Column[String]) =>
+      for {
+        rel <- relations
+        if rel.entity1GUID === guid
+        attr <- attributes
+        if attr.entityGUID === rel.relationGUID ||
+           attr.entityGUID === rel.entity2GUID } yield (attr.entityGUID, attr.name -> attr.value) )
+
+  def findDownstream(guid: String)(implicit session: Session) = {
+    val attrMap = kidAttrs(guid).run groupBy {_._1} mapValues {_ map {_._2}}
+    for ( entRel <- kids(guid).run )
+      yield GenericRelEnt(
+              GenericRelationship(entRel._2,attrMap(entRel._1).toMap),
+              GenericEntity(entRel._3.guid.get,entRel._3.entityType,
+                            GenericSysAttrs(entRel._3.bossID,entRel._3.createdDate.get.getTime,entRel._3.createdBy,entRel._3.modifiedDate map {_.getTime},entRel._3.modifiedBy),
+                            attrMap.getOrElse(entRel._3.guid.get,mutable.Map.empty[String,String]).toMap))
+  }
+
+  // query for upstream entities
+  private val rents = Compiled(
+    (guid: Column[String]) =>
+      for {
+        rel <- relations
+        if rel.entity2GUID === guid
+        selfEnt <- rel.relation
+        targetEnt <- rel.entity1 } yield (selfEnt.guid,selfEnt.entityType,targetEnt) )
+
+  private val rentAttrs = Compiled(
+    (guid: Column[String]) =>
+      for {
+        rel <- relations
+        if rel.entity2GUID === guid
+        attr <- attributes
+        if attr.entityGUID === rel.relationGUID ||
+           attr.entityGUID === rel.entity1GUID } yield (attr.entityGUID, attr.name -> attr.value) )
+
+  def findUpstream(guid: String)(implicit session: Session) = {
+    val attrMap = rentAttrs(guid).run groupBy {_._1} mapValues {_ map {_._2}}
+    for ( entRel <- rents(guid).run )
+      yield GenericRelEnt(
+              GenericRelationship(entRel._2,attrMap(entRel._1).toMap),
+              GenericEntity(entRel._3.guid.get,entRel._3.entityType,
+                            GenericSysAttrs(entRel._3.bossID,entRel._3.createdDate.get.getTime,entRel._3.createdBy,entRel._3.modifiedDate map {_.getTime},entRel._3.modifiedBy),
+                            attrMap.getOrElse(entRel._3.guid.get,mutable.Map.empty[String,String]).toMap))
+  }
+
+  // query for a particular entity
+  private val entityByGUID = Compiled(
+    (guid: Column[String]) =>
+      for {
+        ent <- entities
+        if ent.guid === guid } yield ent )
+
+  private val attrsByGUID = Compiled(
+    (guid: Column[String]) =>
+      for {
+        attr <- attributes
+        if attr.entityGUID === guid } yield (attr.name, attr.value) )
+
+  def fetchEntity(guid: String)(implicit session: Session) = {
+    val entities =
+      for ( ent <- entityByGUID(guid).run )
+        yield GenericEntity(ent.guid.get,ent.entityType,
+                            GenericSysAttrs(ent.bossID,ent.createdDate.get.getTime,ent.createdBy,ent.modifiedDate map {_.getTime},ent.modifiedBy),
+                            attrsByGUID(guid).run.toMap)
+    assume(entities.size < 2, "query on unique vault ID returned multiple results")
+    entities.headOption
+  }
+
+  // find vault IDs of entities of some type having a specified value of some (single) attribute
+  def findEntityIDsByTypeAndAttr(query: GenericQuery)(implicit session: Session) = {
+    for ( ent <- entityByTypeAttribute(query.entityType,query.attrName,query.attrValue).run ) yield ent.guid.get
+  }
+
+  // generic ingestification
+  val entRefPattern = "\\$(\\d+)".r
+
+  def ingestStuff(ingest: GenericIngest, createdBy: String)(implicit session: Session) = {
+    val now = Some(new Timestamp(System.currentTimeMillis))
+
+    // transform List[GenericEntityIngest] into List[Entity]
+    val genEnts = ingest.entities getOrElse List.empty[GenericEntityIngest]
+    val ents = genEnts  map { genEnt => Entity(genEnt.entityType,createdBy,now,None,None,Some(UUID.randomUUID.toString),genEnt.bossID) }
+    val entGUIDs = ents map { ent => ent.guid.get }
+
+    // transform List[GenericRelationshipIngest] into List[Entity]
+    val genRels = ingest.relations getOrElse List.empty[GenericRelationshipIngest]
+    val relEnts = genRels map { genRel => Entity(genRel.relationType,createdBy,now,None,None,Some(UUID.randomUUID.toString)) }
+    val allEnts = ents ++ relEnts
+
+    // transform List[GenericRelationshipIngest] into List[Relationship]
+    def resolve(guidOrRef: String) = { guidOrRef match { case entRefPattern(intStr) => entGUIDs(intStr.toInt) case _ => guidOrRef } }
+    val rels = genRels.zipWithIndex map { case (genRel,idx) => Relation(relEnts(idx).guid.get,resolve(genRel.ent1),resolve(genRel.ent2)) }
+
+
+    // handle attrs from entities and from relationships
+    val entAttrs = genEnts zip entGUIDs flatMap { case (genEnt,guid) => for ( (name,value) <- genEnt.attrs ) yield Attribute(guid,name,value) }
+    val relAttrs = genRels zip relEnts flatMap { case (genRel,relEnt) => for ( (name,value) <- genRel.attrs ) yield Attribute(relEnt.guid.get,name,value) }
+    val allAttrs = entAttrs ++ relAttrs
+
+    // do the DB work
+    session withTransaction {
+      entities ++= allEnts
+      relations ++= rels
+      attributes ++= allAttrs
+    }
+
+    // return GUIDs for new entities
+    entGUIDs
   }
 }

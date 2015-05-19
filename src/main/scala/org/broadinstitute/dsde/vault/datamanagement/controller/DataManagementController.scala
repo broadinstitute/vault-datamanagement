@@ -158,4 +158,35 @@ object DataManagementController {
         dataAccess.getEntity(id)
     }
   }
+
+  // ==================== generic entity service methods ====================
+  def findDownstream(guid: String) = {
+    database withSession {
+      implicit session => dataAccess.findDownstream(guid)
+    }
+  }
+
+  def findUpstream(guid: String) = {
+    database withSession {
+      implicit session => dataAccess.findUpstream(guid)
+    }
+  }
+
+  def fetchEntity(guid: String) = {
+    database withSession {
+      implicit session => dataAccess.fetchEntity(guid)
+    }
+  }
+
+  def findEntityIDsByTypeAndAttr(query: GenericQuery) = {
+    database withSession {
+      implicit session => dataAccess.findEntityIDsByTypeAndAttr(query)
+    }
+  }
+
+  def ingestStuff(ingest: GenericIngest, createdBy: String) = {
+    database withSession {
+      implicit session => dataAccess.ingestStuff(ingest, createdBy)
+    }
+  }
 }

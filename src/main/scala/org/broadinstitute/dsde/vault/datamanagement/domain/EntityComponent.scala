@@ -12,7 +12,8 @@ case class Entity
   createdDate: Option[Timestamp] = None,
   modifiedBy: Option[String] = None,
   modifiedDate: Option[Timestamp] = None,
-  guid: Option[String] = None
+  guid: Option[String] = None,
+  bossID: Option[String] = None
   )
 
 trait EntityComponent {
@@ -33,7 +34,9 @@ trait EntityComponent {
 
     def guid = column[String]("GUID", O.PrimaryKey)
 
-    override def * = (entityType, createdBy, createdDate.?, modifiedBy.?, modifiedDate.?, guid.?) <>(Entity.tupled, Entity.unapply)
+    def bossID = column[String]("BOSS_ID")
+
+    override def * = (entityType, createdBy, createdDate.?, modifiedBy.?, modifiedDate.?, guid.?, bossID.?) <>(Entity.tupled, Entity.unapply)
   }
 
   val entities = TableQuery[Entities]
