@@ -46,16 +46,17 @@ class GenericServiceSpec extends DataManagementDatabaseFreeSpec with GenericServ
         }
 
         "findEntitiesByTypeAndAttr should retrieve the ID of the bam file" in {
-          Get(s"$pathBase",GenericQuery("unmappedBAM","queryAttr",aValue)) ~> sealRoute(findEntitiesByTypeAndAttrRoute) ~> check {
-            val files = responseAs[List[String]]
+          Get(s"$pathBase",GenericQuery("unmappedBAM",Some(GenericAttributeSpec("queryAttr",aValue)),true)) ~> sealRoute(findEntitiesByTypeAndAttrRoute) ~> check {
+            val files = responseAs[List[GenericEntity]]
             files should have length 1
-            files(0) shouldBe guids(0)
+            files(0).guid shouldBe guids(0)
+            files(0).attrs shouldBe Some(uBAMAttrs)
           }
         }
 
         "findEntitiesByTypeAndAttr with bogus attribute value should return NOT FOUND" in {
-          Get(s"$pathBase",GenericQuery("file","path","foo")) ~> sealRoute(findEntitiesByTypeAndAttrRoute) ~> check {
-            val files = responseAs[List[String]]
+          Get(s"$pathBase",GenericQuery("file",Some(GenericAttributeSpec("path","foo")),false)) ~> sealRoute(findEntitiesByTypeAndAttrRoute) ~> check {
+            val files = responseAs[List[GenericEntity]]
             files should have length 0
           }
         }
@@ -67,7 +68,7 @@ class GenericServiceSpec extends DataManagementDatabaseFreeSpec with GenericServ
             uBAM.entityType shouldBe "unmappedBAM"
             uBAM.sysAttrs.bossID shouldBe empty
             uBAM.sysAttrs.createdBy shouldBe "TestAccount"
-            uBAM.attrs shouldBe uBAMAttrs
+            uBAM.attrs shouldBe Some(uBAMAttrs)
           }
         }
 
@@ -83,20 +84,20 @@ class GenericServiceSpec extends DataManagementDatabaseFreeSpec with GenericServ
             dRelEnts should have length 2
             val bamRelEnt = if ( dRelEnts(0).entity.guid == guids(1) ) dRelEnts(0) else dRelEnts(1)
             bamRelEnt.relationship.relationType shouldBe "fileType"
-            bamRelEnt.relationship.attrs shouldBe bamRelAttrs
+            bamRelEnt.relationship.attrs shouldBe Some(bamRelAttrs)
             bamRelEnt.entity.guid shouldBe(guids(1))
             bamRelEnt.entity.entityType shouldBe "file"
             bamRelEnt.entity.sysAttrs.bossID shouldBe Some(bamBossId)
             bamRelEnt.entity.sysAttrs.createdBy shouldBe "TestAccount"
-            bamRelEnt.entity.attrs shouldBe bamAttrs
+            bamRelEnt.entity.attrs shouldBe Some(bamAttrs)
             val baiRelEnt = if ( dRelEnts(1).entity.guid == guids(2) ) dRelEnts(1) else dRelEnts(0)
             baiRelEnt.relationship.relationType shouldBe "fileType"
-            baiRelEnt.relationship.attrs shouldBe baiRelAttrs
+            baiRelEnt.relationship.attrs shouldBe Some(baiRelAttrs)
             baiRelEnt.entity.guid shouldBe(guids(2))
             baiRelEnt.entity.entityType shouldBe "file"
             baiRelEnt.entity.sysAttrs.bossID shouldBe Some(baiBossId)
             baiRelEnt.entity.sysAttrs.createdBy shouldBe "TestAccount"
-            baiRelEnt.entity.attrs shouldBe baiAttrs
+            baiRelEnt.entity.attrs shouldBe Some(baiAttrs)
           }
         }
 
@@ -106,12 +107,12 @@ class GenericServiceSpec extends DataManagementDatabaseFreeSpec with GenericServ
             uRelEnts should have length 1
             val uBAMRelEnt = uRelEnts(0)
             uBAMRelEnt.relationship.relationType shouldBe "fileType"
-            uBAMRelEnt.relationship.attrs shouldBe bamRelAttrs
+            uBAMRelEnt.relationship.attrs shouldBe Some(bamRelAttrs)
             uBAMRelEnt.entity.guid shouldBe(guids(0))
             uBAMRelEnt.entity.entityType shouldBe "unmappedBAM"
             uBAMRelEnt.entity.sysAttrs.bossID shouldBe empty
             uBAMRelEnt.entity.sysAttrs.createdBy shouldBe "TestAccount"
-            uBAMRelEnt.entity.attrs shouldBe uBAMAttrs
+            uBAMRelEnt.entity.attrs shouldBe Some(uBAMAttrs)
           }
         }
       }

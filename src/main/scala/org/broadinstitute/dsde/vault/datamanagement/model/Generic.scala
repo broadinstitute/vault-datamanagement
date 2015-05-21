@@ -25,14 +25,14 @@ case class GenericEntity(
   @(ApiModelProperty@field)("some system-generated 'when's and 'who's")
   sysAttrs: GenericSysAttrs,
   @(ApiModelProperty@field)("an open set of metadata attributes of the entity")
-  attrs: Map[String,String] )
+  attrs: Option[Map[String,String]] )
 
 @ApiModel("a directed relationship between two entities")
 case class GenericRelationship(
   @(ApiModelProperty@field)("the type of relationship (open vocabulary - not enumerated)")
   relationType: String,
   @(ApiModelProperty@field)("an open set of metadata attributes of the relationship")
-  attrs: Map[String,String] )
+  attrs: Option[Map[String,String]] )
 
 @ApiModel("a description of a relationship and of the entity targeted by the relationship")
 case class GenericRelEnt(
@@ -69,11 +69,18 @@ case class GenericIngest(
   @(ApiModelProperty@field)("some relationships to create among the new (or previously existing) entities")
   relations: Option[List[GenericRelationshipIngest]] )
 
-@ApiModel("a very simple query for a type and metadata attribute value")
+@ApiModel("a metadata attribute name and value")
+case class GenericAttributeSpec(
+  @(ApiModelProperty@field)("the name")
+  name: String,
+  @(ApiModelProperty@field)("the value")
+  value: String )
+
+@ApiModel("a query for a type of entity with optional metadata attribute value")
 case class GenericQuery(
   @(ApiModelProperty@field)("the entity type")
   entityType: String,
-  @(ApiModelProperty@field)("the attribute name")
-  attrName: String,
-  @(ApiModelProperty@field)("the attribute value")
-  attrValue: String )
+  @(ApiModelProperty@field)("optional metadata attribute spec")
+  attrSpec: Option[GenericAttributeSpec],
+  @(ApiModelProperty@field)("return metadata attributes, or skip it")
+  expandAttrs: Boolean )

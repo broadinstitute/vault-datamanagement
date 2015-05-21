@@ -57,7 +57,7 @@ trait GenericService extends HttpService {
     value="find IDs of entities of a specified type having a specified metadata attribute value",
     nickname="findEntitiesByTypeAndAttr",
     httpMethod="GET",
-    response=classOf[List[String]],
+    response=classOf[Seq[GenericEntity]],
     notes="response is a list of vault IDs of the matching entities")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name="version", required=true, dataType="string", paramType="path", value="API version", allowableValues=ApiVersions),
@@ -73,7 +73,7 @@ trait GenericService extends HttpService {
         entity(as[GenericQuery]) { query =>
           respondWithMediaType(`application/json`) {
             complete {
-              DataManagementController.findEntityIDsByTypeAndAttr(query).toJson.prettyPrint
+              DataManagementController.findEntitiesByTypeAndAttr(query).toJson.prettyPrint
             }
           }
         }

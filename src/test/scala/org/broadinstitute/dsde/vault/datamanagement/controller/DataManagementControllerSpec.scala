@@ -1,8 +1,9 @@
 package org.broadinstitute.dsde.vault.datamanagement.controller
 
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
-import org.broadinstitute.dsde.vault.datamanagement.model.GenericIngest
+import org.broadinstitute.dsde.vault.datamanagement.model.GenericAttributeSpec
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericEntityIngest
+import org.broadinstitute.dsde.vault.datamanagement.model.GenericIngest
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericQuery
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericRelationshipIngest
 
@@ -50,9 +51,11 @@ class DataManagementControllerSpec extends DataManagementDatabaseFreeSpec {
           guids should have length 3
 
           // list the IDs of "unmappedBAM" entities having a "queryAttr" of "someValue"
-          val files = da.findEntityIDsByTypeAndAttr(GenericQuery("unmappedBAM","queryAttr","someValue"))
+          val files = da.findEntitiesByTypeAndAttr(GenericQuery("unmappedBAM",Some(GenericAttributeSpec("queryAttr","someValue")),false))
           files should have length 1
-          files(0) shouldBe guids(0)
+          val uBAM = files(0)
+          uBAM.guid shouldBe guids(0)
+          uBAM.attrs shouldBe empty
 
           // check the head entity
           val uBAMOpt = da.fetchEntity(guids(0))
@@ -62,39 +65,39 @@ class DataManagementControllerSpec extends DataManagementDatabaseFreeSpec {
           uBAMEnt.entityType shouldBe "unmappedBAM"
           uBAMEnt.sysAttrs.bossID shouldBe empty
           uBAMEnt.sysAttrs.createdBy shouldBe "testUser"
-          uBAMEnt.attrs shouldBe uBAMAttrs
+          uBAMEnt.attrs shouldBe Some(uBAMAttrs)
 
           // check the kids
           val dRelEnts = da.findDownstream(guids(0))
           dRelEnts should have length 2
           val bamRelEnt = if ( dRelEnts(0).entity.guid == guids(1) ) dRelEnts(0) else dRelEnts(1)
           bamRelEnt.relationship.relationType shouldBe "fileType"
-          bamRelEnt.relationship.attrs shouldBe bamRelAttrs
+          bamRelEnt.relationship.attrs shouldBe Some(bamRelAttrs)
           bamRelEnt.entity.guid shouldBe(guids(1))
           bamRelEnt.entity.entityType shouldBe "file"
           bamRelEnt.entity.sysAttrs.bossID shouldBe Some("bossIdOfBam")
           bamRelEnt.entity.sysAttrs.createdBy shouldBe "testUser"
-          bamRelEnt.entity.attrs shouldBe bamAttrs
+          bamRelEnt.entity.attrs shouldBe Some(bamAttrs)
           val baiRelEnt = if ( dRelEnts(1).entity.guid == guids(2) ) dRelEnts(1) else dRelEnts(0)
           baiRelEnt.relationship.relationType shouldBe "fileType"
-          baiRelEnt.relationship.attrs shouldBe baiRelAttrs
+          baiRelEnt.relationship.attrs shouldBe Some(baiRelAttrs)
           baiRelEnt.entity.guid shouldBe(guids(2))
           baiRelEnt.entity.entityType shouldBe "file"
           baiRelEnt.entity.sysAttrs.bossID shouldBe Some("bossIdOfBai")
           baiRelEnt.entity.sysAttrs.createdBy shouldBe "testUser"
-          baiRelEnt.entity.attrs shouldBe baiAttrs
+          baiRelEnt.entity.attrs shouldBe Some(baiAttrs)
 
           // check the parent
           val uRelEnts = da.findUpstream(guids(1))
           uRelEnts should have length 1
           val uBAMRelEnt = uRelEnts(0)
           uBAMRelEnt.relationship.relationType shouldBe "fileType"
-          uBAMRelEnt.relationship.attrs shouldBe bamRelAttrs
+          uBAMRelEnt.relationship.attrs shouldBe Some(bamRelAttrs)
           uBAMRelEnt.entity.guid shouldBe(guids(0))
           uBAMRelEnt.entity.entityType shouldBe "unmappedBAM"
           uBAMRelEnt.entity.sysAttrs.bossID shouldBe empty
           uBAMRelEnt.entity.sysAttrs.createdBy shouldBe "testUser"
-          uBAMRelEnt.entity.attrs shouldBe uBAMAttrs
+          uBAMRelEnt.entity.attrs shouldBe Some(uBAMAttrs)
         }
       }
     }
