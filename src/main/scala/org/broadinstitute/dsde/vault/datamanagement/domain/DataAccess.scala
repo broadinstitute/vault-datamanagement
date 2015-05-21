@@ -275,46 +275,12 @@ class DataAccess(val driver: JdbcProfile)
     entities.headOption
   }
 
-  // find vault IDs of entities of some type having a specified value of some (single) attribute
-  private val entitiesByType = Compiled(
-    (entityType: Column[String]) =>
-      for {
-        ent <- entities
-        if ent.entityType === entityType } yield ent )
-
-  private val attrsByNameAndValue = Compiled(
-    (attrName: Column[String], attrValue: Column[String]) =>
-      for {
-        attr <- attributes
-        if attr.name === attrName && attr.value === attrValue } yield attr )
-
-  private val entitiesByTypeAttrs = Compiled(
-    (entityType: Column[String]) =>
-      for {
-        attr <- attributes
-        ent <- attr.entity
-        if ent.entityType === entityType } yield (attr.entityGUID, attr.name -> attr.value) )
-
-  private val entityByTypeAttributeAttrs = Compiled(
-    (entityType: Column[String],
-     attributeName: Column[String],
-     attributeValue: Column[String]) => for {
-      attrNV <- attributes
-      if attrNV.name === attributeName && attrNV.value === attributeValue
-      entity <- attrNV.entity
-      if entity.entityType === entityType
-      attr <- attributes
-      if entity.guid === attr.entityGUID } yield (attr.entityGUID, attr.name -> attr.value) )
-
-  def findEntitiesByTypeAndAttr(query: GenericQuery)(implicit session: Session) = {
+  // generic query
+  def findEntities(query: GenericEntityQuery)(implicit session: Session) = {
     val bareEntityQuery = entities.filter(_.entityType === query.entityType)
-    val entityQuery =
-      if ( !query.attrSpec.isDefined ) bareEntityQuery
-      else {
-        val nv = query.attrSpec.get
-        val attrNVQuery = attributes.filter( attr => attr.name === nv.name && attr.value === nv.value )
-        bareEntityQuery innerJoin attrNVQuery on(_.guid === _.entityGUID) map(_._1)
-      }
+    val entityQuery = query.attrSpec.foldLeft(bareEntityQuery)({(entQ,spec) => {
+      val attrNVQuery = attributes.filter( attr => attr.name === spec.name && attr.value === spec.value )
+      entQ innerJoin attrNVQuery on(_.guid === _.entityGUID) map(_._1) } })
     val attrMap =
       if ( !query.expandAttrs ) None
       else {

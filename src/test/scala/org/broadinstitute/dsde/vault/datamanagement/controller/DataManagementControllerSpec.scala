@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSp
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericAttributeSpec
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericEntityIngest
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericIngest
-import org.broadinstitute.dsde.vault.datamanagement.model.GenericQuery
+import org.broadinstitute.dsde.vault.datamanagement.model.GenericEntityQuery
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericRelationshipIngest
 
 class DataManagementControllerSpec extends DataManagementDatabaseFreeSpec {
@@ -51,7 +51,7 @@ class DataManagementControllerSpec extends DataManagementDatabaseFreeSpec {
           guids should have length 3
 
           // list the IDs of "unmappedBAM" entities having a "queryAttr" of "someValue"
-          val files = da.findEntitiesByTypeAndAttr(GenericQuery("unmappedBAM",Some(GenericAttributeSpec("queryAttr","someValue")),false))
+          val files = da.findEntities(GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr","someValue")),false))
           files should have length 1
           val uBAM = files(0)
           uBAM.guid shouldBe guids(0)

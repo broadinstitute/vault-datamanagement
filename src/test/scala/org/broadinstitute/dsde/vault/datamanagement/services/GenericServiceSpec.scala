@@ -45,8 +45,9 @@ class GenericServiceSpec extends DataManagementDatabaseFreeSpec with GenericServ
           }
         }
 
-        "findEntitiesByTypeAndAttr should retrieve the ID of the bam file" in {
-          Get(s"$pathBase",GenericQuery("unmappedBAM",Some(GenericAttributeSpec("queryAttr",aValue)),true)) ~> sealRoute(findEntitiesByTypeAndAttrRoute) ~> check {
+        "findEntities should retrieve the ID of the bam file" in {
+          Get(s"$pathBase",GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr",aValue),GenericAttributeSpec("ownerId","me")),true)) ~>
+                      sealRoute(findEntitiesByTypeAndAttrRoute) ~> check {
             val files = responseAs[List[GenericEntity]]
             files should have length 1
             files(0).guid shouldBe guids(0)
@@ -54,8 +55,8 @@ class GenericServiceSpec extends DataManagementDatabaseFreeSpec with GenericServ
           }
         }
 
-        "findEntitiesByTypeAndAttr with bogus attribute value should return NOT FOUND" in {
-          Get(s"$pathBase",GenericQuery("file",Some(GenericAttributeSpec("path","foo")),false)) ~> sealRoute(findEntitiesByTypeAndAttrRoute) ~> check {
+        "findEntities with bogus attribute value should return NOT FOUND" in {
+          Get(s"$pathBase",GenericEntityQuery("file",Seq(GenericAttributeSpec("path","foo")),false)) ~> sealRoute(findEntitiesByTypeAndAttrRoute) ~> check {
             val files = responseAs[List[GenericEntity]]
             files should have length 0
           }

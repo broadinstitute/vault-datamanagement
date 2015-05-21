@@ -11,7 +11,7 @@ case class GenericSysAttrs(
   createdDate: Long,
   @(ApiModelProperty@field)("openAM commonName of entity creator")
   createdBy: String,
-  @(ApiModelProperty@field)("when the entity was most recently modified (mSecs since epoch)")
+  @(ApiModelProperty@field)(value="when the entity was most recently modified (mSecs since epoch)",dataType="Long")
   modifiedDate: Option[Long],
   @(ApiModelProperty@field)("openAM commonName of most recent modifier")
   modifiedBy: Option[String] )
@@ -77,10 +77,10 @@ case class GenericAttributeSpec(
   value: String )
 
 @ApiModel("a query for a type of entity with optional metadata attribute value")
-case class GenericQuery(
+case class GenericEntityQuery(
   @(ApiModelProperty@field)("the entity type")
   entityType: String,
   @(ApiModelProperty@field)("optional metadata attribute spec")
-  attrSpec: Option[GenericAttributeSpec],
+  attrSpec: Seq[GenericAttributeSpec],
   @(ApiModelProperty@field)("return metadata attributes, or skip it")
   expandAttrs: Boolean )

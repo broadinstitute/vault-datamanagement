@@ -21,5 +21,5 @@ object JsonImplicits extends DefaultJsonProtocol {
   implicit val impGenericRelationshipIngest = jsonFormat4(GenericRelationshipIngest)
   implicit val impGenericIngest = jsonFormat2(GenericIngest)
   implicit val impGenericAttributeSpec = jsonFormat2(GenericAttributeSpec)
-  implicit val impGenericQuery = jsonFormat3(GenericQuery)
+  implicit val impGenericQuery = jsonFormat3(GenericEntityQuery)
 }

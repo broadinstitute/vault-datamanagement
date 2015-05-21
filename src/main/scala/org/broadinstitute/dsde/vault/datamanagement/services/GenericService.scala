@@ -6,7 +6,7 @@ import org.broadinstitute.dsde.vault.common.directives.VersioningDirectives._
 import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericEntity
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericIngest
-import org.broadinstitute.dsde.vault.datamanagement.model.GenericQuery
+import org.broadinstitute.dsde.vault.datamanagement.model.GenericEntityQuery
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericRelEnt
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
 import spray.http.MediaTypes._
@@ -28,7 +28,8 @@ trait GenericService extends HttpService {
     value="store some entities and relationships",
     nickname="genericIngest",
     httpMethod="POST",
-    response=classOf[List[String]],
+    response=classOf[String],
+    responseContainer="List",
     notes="response is a list of vault IDs of the new entities")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name="version", required=true, dataType="string", paramType="path", value="API version", allowableValues=ApiVersions),
@@ -57,11 +58,11 @@ trait GenericService extends HttpService {
     value="find IDs of entities of a specified type having a specified metadata attribute value",
     nickname="findEntitiesByTypeAndAttr",
     httpMethod="GET",
-    response=classOf[Seq[GenericEntity]],
-    notes="response is a list of vault IDs of the matching entities")
+    response=classOf[GenericEntity],
+    responseContainer="List")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name="version", required=true, dataType="string", paramType="path", value="API version", allowableValues=ApiVersions),
-    new ApiImplicitParam(name="body", required=true, dataType="org.broadinstitute.dsde.vault.datamanagement.model.GenericQuery", paramType="body", value="entities to find")))
+    new ApiImplicitParam(name="body", required=true, dataType="org.broadinstitute.dsde.vault.datamanagement.model.GenericEntityQuery", paramType="body", value="entities to find")))
   @ApiResponses(Array(
     new ApiResponse(code=200, message="Successful"),
     new ApiResponse(code=400, message="Bad Request"),
@@ -70,7 +71,7 @@ trait GenericService extends HttpService {
   def findEntitiesByTypeAndAttrRoute = {
     pathVersion(ApiPrefix,DefaultVersion) { version =>
       get {
-        entity(as[GenericQuery]) { query =>
+        entity(as[GenericEntityQuery]) { query =>
           respondWithMediaType(`application/json`) {
             complete {
               DataManagementController.findEntitiesByTypeAndAttr(query).toJson.prettyPrint
@@ -109,7 +110,8 @@ trait GenericService extends HttpService {
     value="get entities upstream of a specified entity",
     nickname="findUpstream",
     httpMethod="GET",
-    response=classOf[List[GenericRelEnt]])
+    response=classOf[GenericRelEnt],
+    responseContainer="List")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name="version", required=true, dataType="string", paramType="path", value="API version", allowableValues=ApiVersions),
     new ApiImplicitParam(name="id", required=true, dataType="string", paramType="path", value="vault ID"),
@@ -134,7 +136,8 @@ trait GenericService extends HttpService {
     value="get entities downstream of a specified entity",
     nickname="findDownstream",
     httpMethod="GET",
-    response=classOf[List[GenericRelEnt]])
+    response=classOf[GenericRelEnt],
+    responseContainer="List")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name="version", required=true, dataType="string", paramType="path", value="API version", allowableValues=ApiVersions),
     new ApiImplicitParam(name="id", required=true, dataType="string", paramType="path", value="vault ID"),
