@@ -1,10 +1,17 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
+import org.broadinstitute.dsde.vault.datamanagement.controller.orient.frames.FramesDataManagementController
+import org.broadinstitute.dsde.vault.datamanagement.controller.orient.obj.OrientObjectDataManagementController
 import org.broadinstitute.dsde.vault.datamanagement.model._
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
+import org.scalatest.time.{Seconds, Millis, Span}
 import spray.http.StatusCodes._
 import spray.httpx.SprayJsonSupport._
+import scala.concurrent.duration._
 
 class GenericServiceSpec extends DataManagementDatabaseFreeSpec with GenericService   {
 
@@ -20,7 +27,7 @@ class GenericServiceSpec extends DataManagementDatabaseFreeSpec with GenericServ
       val pathBase = "/entities" + v(version)
 
       s"when accessing the $pathBase path" - {
-          val aValue = "val"+v(version)
+          val aValue = "val"+UUID.randomUUID().toString
           val uBAMAttrs = Map("ownerId" -> "me", "queryAttr" -> aValue)
           val bamBossId = "bamId"+v(version)
           val baiBossId = "baiId"+v(version)

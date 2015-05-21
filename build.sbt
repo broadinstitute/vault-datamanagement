@@ -40,6 +40,9 @@ scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 libraryDependencies ++= {
   val akkaV = "2.3.6"
   val sprayV = "1.3.2"
+  val orientdbV = "2.0.9"
+  val tinkerpopV = "2.6.0" // Dependent on the orientdbV
+  val orientdbGroovyV = "1.8.9" // Dependent on the orientdbV
   Seq(
     vaultOrg %% "vault-common" % "0.1-17-0ee4ad5"
     , "io.spray" %% "spray-can" % sprayV
@@ -52,6 +55,16 @@ libraryDependencies ++= {
     , "org.scalatest" %% "scalatest" % "2.2.1" % "test"
     , "com.gettyimages" %% "spray-swagger" % "0.5.0"
     , "org.webjars" % "swagger-ui" % "2.1.8-M1"
+    , "com.orientechnologies" % "orientdb-core" % orientdbV
+    , "com.orientechnologies" % "orientdb-graphdb" % orientdbV exclude("org.codehaus.groovy", "groovy")
+    , "com.orientechnologies" % "orientdb-server" % orientdbV
+    , "com.orientechnologies" % "orientdb-client" % orientdbV
+    , "com.orientechnologies" % "orientdb-lucene" % orientdbV
+    , "com.tinkerpop.gremlin" % "gremlin-java" % tinkerpopV
+    , "com.tinkerpop" % "frames" % tinkerpopV
+    // ASM conflict in Frames vs. Groovy. Restore groovy from above with shaded version.
+    // http://www.jayway.com/2013/04/12/solving-asm-conflicts-after-upgrading-to-groovy-2-1/
+    , "org.codehaus.groovy" % "groovy-all" % orientdbGroovyV
     // -- Logging --
     , "ch.qos.logback" % "logback-classic" % "1.1.2" % "provided"
     , "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"

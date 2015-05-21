@@ -5,7 +5,8 @@ import javax.ws.rs.Path
 import com.wordnik.swagger.annotations._
 import org.broadinstitute.dsde.vault.common.directives.OpenAMDirectives._
 import org.broadinstitute.dsde.vault.common.directives.VersioningDirectives._
-import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
+import org.broadinstitute.dsde.vault.datamanagement.controller.orient.frames.FramesDataManagementController
+import org.broadinstitute.dsde.vault.datamanagement.controller.orient.obj.OrientObjectDataManagementController
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericEntity
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericIngest
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericEntityQuery
@@ -47,7 +48,7 @@ trait GenericService extends HttpService {
           entity(as[GenericIngest]) { ingest =>
             respondWithMediaType(`application/json`) {
               complete {
-                DataManagementController.ingestStuff(ingest,commonName).toJson.prettyPrint
+                FramesDataManagementController.ingestStuff(ingest,commonName).toJson.prettyPrint
               }
             }
           }
@@ -77,7 +78,7 @@ trait GenericService extends HttpService {
         entity(as[GenericEntityQuery]) { query =>
           respondWithMediaType(`application/json`) {
             complete {
-              DataManagementController.findEntitiesByTypeAndAttr(query).toJson.prettyPrint
+              FramesDataManagementController.findEntitiesByTypeAndAttr(query).toJson.prettyPrint
             }
           }
         }
@@ -102,7 +103,7 @@ trait GenericService extends HttpService {
       get {
         respondWithMediaType(`application/json`) {
           complete {
-            DataManagementController.fetchEntity(guid) map {_.toJson.prettyPrint}
+            FramesDataManagementController.fetchEntity(guid) map {_.toJson.prettyPrint}
           }
         }
       }
@@ -129,7 +130,7 @@ trait GenericService extends HttpService {
         parameters('up) { up =>
           respondWithMediaType(`application/json`) {
             complete {
-              DataManagementController.findUpstream(guid).toJson.prettyPrint
+              FramesDataManagementController.findUpstream(guid).toJson.prettyPrint
             }
           }
         }
@@ -157,7 +158,7 @@ trait GenericService extends HttpService {
         parameters('down) { down =>
           respondWithMediaType(`application/json`) {
             complete {
-              DataManagementController.findDownstream(guid).toJson.prettyPrint
+              FramesDataManagementController.findDownstream(guid).toJson.prettyPrint
             }
           }
         }
