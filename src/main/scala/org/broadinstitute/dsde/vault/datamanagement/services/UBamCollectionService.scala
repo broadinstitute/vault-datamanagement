@@ -1,9 +1,11 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
+import javax.ws.rs.Path
+
 import com.wordnik.swagger.annotations._
 import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
 import org.broadinstitute.dsde.vault.common.directives.OpenAMDirectives._
-import org.broadinstitute.dsde.vault.datamanagement.model.UBamCollection
+import org.broadinstitute.dsde.vault.datamanagement.model.{TermSearch, UBamCollection,_}
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
 import spray.http.MediaTypes._
 import spray.httpx.SprayJsonSupport._
@@ -17,7 +19,7 @@ trait UBamCollectionService extends HttpService {
   private final val ApiPrefix = "ubams"
   private final val ApiVersions = "v1"
 
-  val routes = ingestRoute ~ describeRoute
+  val routes = ingestRoute ~ describeRoute ~ searchRoute
 
   @ApiOperation(value = "Creates an uBAM collection",
     nickname = "ubam_collection_ingest",
@@ -85,4 +87,41 @@ trait UBamCollectionService extends HttpService {
       }
     }
   }
+
+  @Path("/{version}/search")
+  @ApiOperation(value = "Search",
+    nickname = "search",
+    httpMethod = "POST",
+    produces = "application/json",
+    consumes = "application/json",
+    response = classOf[UBamCollection],
+    responseContainer = "List",
+    notes = "Accepts a json packet as POST. Performs a search based on the supplied key/value List."
+  )
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "version", required = true, dataType = "string", paramType = "path", value = "API version", allowableValues = ApiVersions),
+    new ApiImplicitParam(name = "body", required = true, dataType = "List[org.broadinstitute.dsde.vault.datamanagement.model.TermSearch]", paramType = "body", value = " List of Key/value to search")
+  ))
+  @ApiResponses(Array(
+    new ApiResponse(code = 200, message = "Successful"),
+    new ApiResponse(code = 400, message = "Bad Request"),
+    new ApiResponse(code = 500, message = "Vault Internal Error")
+  ))
+  def searchRoute = {
+    path("ubamcollections" /"v" ~ IntNumber / "search") { version =>
+      post {
+        rejectEmptyResponse {
+          entity(as[List[TermSearch]]) { termsToSearch =>
+            respondWithMediaType(`application/json`) {
+              complete {
+                DataManagementController.search(termsToSearch,Option(version)).toJson.prettyPrint
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
 }
+

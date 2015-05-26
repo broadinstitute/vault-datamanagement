@@ -60,6 +60,7 @@ libraryDependencies ++= {
     , "org.hsqldb" % "hsqldb" % "2.3.2" // % "test" TODO: Using for dev assembly, at the moment
     , "org.postgresql" % "postgresql" % "9.4-1200-jdbc41" exclude("org.slf4j", "slf4j-simple")
     , "org.liquibase" % "liquibase-core" % "3.3.2" % "test"
+    , "org.elasticsearch" % "elasticsearch" % "1.4.4"
   )
 }
 

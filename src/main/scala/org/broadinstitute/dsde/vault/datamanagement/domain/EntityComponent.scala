@@ -4,6 +4,7 @@ import java.sql.Timestamp
 import java.util.UUID
 
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementConfig
+import org.broadinstitute.dsde.vault.datamanagement.controller.EntityType
 
 case class Entity
 (
@@ -83,5 +84,13 @@ trait EntityComponent {
     } else {
       entities.list
     }
+  }
+
+  def getCollectionList()(implicit session: Session): List[Entity] = {
+    entities.filter(_.entityType===EntityType.UBAM_COLLECTION.databaseKey).list
+  }
+
+  def getEntityCollectionListByIdList(ids:List[String])(implicit session: Session): List[Entity] = {
+    entities.filter(_.guid inSet  ids).filter(_.entityType===EntityType.UBAM_COLLECTION.databaseKey).list
   }
 }

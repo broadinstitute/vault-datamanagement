@@ -44,4 +44,14 @@ object DataManagementConfig {
     lazy val entitiesPageLimitDefault = ConfigUtil.getIntOption(database, "entities.pageLimitDefault")
   }
 
+  object ElasticSearchConfig {
+    private val elasticsearch = config.getConfig("elasticsearch")
+    lazy val clusterName = elasticsearch.getString("clusterName")
+    lazy val server = elasticsearch.getString("server")
+    lazy val port = elasticsearch.getString("port")
+    lazy val indexName = elasticsearch.getAnyRef("indexName")
+  }
+
+
+
 }
