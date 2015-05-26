@@ -2,7 +2,6 @@ package org.broadinstitute.dsde.vault.datamanagement.services
 
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
 import org.broadinstitute.dsde.vault.datamanagement.model._
-import org.broadinstitute.dsde.vault.datamanagement.model.Properties._
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
 import spray.http.StatusCodes._
 import spray.httpx.SprayJsonSupport._
@@ -46,12 +45,24 @@ class GenericServiceSpec extends DataManagementDatabaseFreeSpec with GenericServ
         }
 
         "findEntities should retrieve the ID of the bam file" in {
+          Get(s"$pathBase",GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr",aValue),GenericAttributeSpec("ownerId","me")),false)) ~>
+            sealRoute(findEntitiesByTypeAndAttrRoute) ~> check {
+            val files = responseAs[List[GenericEntity]]
+            files should have length 1
+            files(0).guid shouldBe guids(0)
+            files(0).attrs shouldBe empty
+          }
+        }
+
+        "findEntities should retrieve the ID and attributes of the bam file" in {
           Get(s"$pathBase",GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr",aValue),GenericAttributeSpec("ownerId","me")),true)) ~>
                       sealRoute(findEntitiesByTypeAndAttrRoute) ~> check {
             val files = responseAs[List[GenericEntity]]
             files should have length 1
             files(0).guid shouldBe guids(0)
             files(0).attrs shouldBe Some(uBAMAttrs)
+            files(0).attrs.get("queryAttr") shouldBe aValue
+            files(0).attrs.get("ownerId") shouldBe "me"
           }
         }
 

@@ -1,5 +1,7 @@
 package org.broadinstitute.dsde.vault.datamanagement.controller
 
+import java.util.UUID
+
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericAttributeSpec
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericEntityIngest
@@ -32,9 +34,10 @@ class DataManagementControllerSpec extends DataManagementDatabaseFreeSpec {
     "should be able to ingest and query generically" in {
       val da = DataManagementController.dataAccess
       val db = DataManagementController.database
+      val someValue = UUID.randomUUID().toString
       db withSession {
         implicit session => {
-          val uBAMAttrs = Map("ownerId" -> "testUser", "queryAttr" -> "someValue")
+          val uBAMAttrs = Map("ownerId" -> "testUser", "queryAttr" -> someValue)
           val bamAttrs = Map.empty[String,String]
           val baiAttrs = Map.empty[String,String]
           val bamRelAttrs = Map("name" -> "bam")
@@ -50,8 +53,8 @@ class DataManagementControllerSpec extends DataManagementDatabaseFreeSpec {
           val guids = da.ingestStuff(ingest, "testUser")
           guids should have length 3
 
-          // list the IDs of "unmappedBAM" entities having a "queryAttr" of "someValue"
-          val files = da.findEntities(GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr","someValue")),false))
+          // list the IDs of "unmappedBAM" entities having a "queryAttr" of someValue
+          val files = da.findEntities(GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr",someValue)),false))
           files should have length 1
           val uBAM = files(0)
           uBAM.guid shouldBe guids(0)
@@ -98,6 +101,39 @@ class DataManagementControllerSpec extends DataManagementDatabaseFreeSpec {
           uBAMRelEnt.entity.sysAttrs.bossID shouldBe empty
           uBAMRelEnt.entity.sysAttrs.createdBy shouldBe "testUser"
           uBAMRelEnt.entity.attrs shouldBe Some(uBAMAttrs)
+        }
+      }
+    }
+    "should be able to ingest and query generically returning metadata" in {
+      val da = DataManagementController.dataAccess
+      val db = DataManagementController.database
+      val someValue = UUID.randomUUID().toString
+      db withSession {
+        implicit session => {
+          val uBAMAttrs = Map("ownerId" -> "testUser", "queryAttr" -> someValue)
+          val bamAttrs = Map.empty[String,String]
+          val baiAttrs = Map.empty[String,String]
+          val bamRelAttrs = Map("name" -> "bam")
+          val baiRelAttrs = Map("name" -> "bai")
+          val ingest = GenericIngest(
+            Some(List(GenericEntityIngest("unmappedBAM",None,uBAMAttrs),
+              GenericEntityIngest("file",Some("bossIdOfBam"),bamAttrs),
+              GenericEntityIngest("file",Some("bossIdOfBai"),baiAttrs))),
+            Some(List(GenericRelationshipIngest("fileType","$0","$1",bamRelAttrs),
+              GenericRelationshipIngest("fileType","$0","$2",baiRelAttrs))))
+
+          // do some ingestion
+          val guids = da.ingestStuff(ingest, "testUser")
+          guids should have length 3
+
+          // list the IDs of "unmappedBAM" entities having a "queryAttr" of someValue
+          val files = da.findEntities(GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr",someValue)),true))
+          files should have length 1
+          val uBAM = files(0)
+          uBAM.entityType shouldBe "unmappedBAM"
+          uBAM.guid shouldBe guids(0)
+          uBAM.attrs.get("ownerId") shouldBe "testUser"
+          uBAM.attrs.get("queryAttr") shouldBe someValue
         }
       }
     }
