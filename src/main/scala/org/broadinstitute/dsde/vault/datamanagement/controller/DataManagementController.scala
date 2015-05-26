@@ -178,9 +178,9 @@ object DataManagementController {
     }
   }
 
-  def findEntityIDsByTypeAndAttr(query: GenericQuery) = {
+  def findEntitiesByTypeAndAttr(query: GenericEntityQuery) = {
     database withSession {
-      implicit session => dataAccess.findEntityIDsByTypeAndAttr(query)
+      implicit session => dataAccess.findEntities(query)
     }
   }
 
