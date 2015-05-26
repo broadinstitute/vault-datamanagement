@@ -1,13 +1,14 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
-import org.broadinstitute.dsde.vault.datamanagement.DataManagementDatabaseFreeSpec
-import org.broadinstitute.dsde.vault.datamanagement.controller.DataManagementController
-import org.broadinstitute.dsde.vault.datamanagement.model.{UBamCollection, UnmappedBAM}
+import org.broadinstitute.dsde.vault.datamanagement.{DataManagementDatabaseFreeSpec}
+import org.broadinstitute.dsde.vault.datamanagement.controller.{EntityType, DataManagementController}
+import org.broadinstitute.dsde.vault.datamanagement.model.{TermSearch, IndexResponse, UBamCollection, UnmappedBAM}
 import org.broadinstitute.dsde.vault.datamanagement.services.JsonImplicits._
 import org.broadinstitute.dsde.vault.datamanagement.model.Properties._
 import spray.httpx.SprayJsonSupport._
 
-class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBamCollectionService {
+class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBamCollectionService with  IndexService{
+
 
   "UBamCollectionService" - {
 
@@ -18,7 +19,7 @@ class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBam
 
     forAll(versions) { (version: Int) =>
       val pathBase = "/ubamcollections/v" + version
-
+      val indexPathBase = "/admin/index/v" + version
       s"when accessing the $pathBase path" - {
 
         val metadata = Option(Map("key1" -> "someKey", "key2" -> "otherKey", "key3" -> "anotherKey"))
@@ -30,10 +31,11 @@ class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBam
 
         var createdId: Option[String] = None
         var properties: Option[Map[String, String]] = None
+        var isIndexed: Boolean = false
 
         "POST should store a new Collection" in {
-          Post( s"$pathBase", UBamCollection(members, metadata)) ~> openAMSession ~> ingestRoute ~> check {
-            val collection = responseAs[UBamCollection]
+         Post( s"$pathBase", UBamCollection(members, metadata)) ~> openAMSession ~> ingestRoute ~> check {
+            val collection =  responseAs[UBamCollection]
             collection.metadata should be(metadata)
             collection.members should be(members)
             collection.properties shouldNot be(empty)
@@ -55,6 +57,32 @@ class UBamCollectionServiceSpec extends DataManagementDatabaseFreeSpec with UBam
             collection.properties should be(properties)
             collection.id should be(createdId)
           }
+        }
+
+        "POST should index the previously stored Collections" in {
+          assume(createdId.isDefined)
+          Post(s"$indexPathBase/"+EntityType.UBAM_COLLECTION.databaseKey) ~> openAMSession ~> indexRoute ~> check {
+            val indexResult = responseAs[IndexResponse]
+            indexResult.messageResult should be("Index  successful")
+            isIndexed = true
+          }
+        }
+        "POST should get an error for invalid entity type" in {
+         Post(s"$indexPathBase/Test") ~> openAMSession ~> indexRoute ~> check {
+            val indexResult = responseAs[IndexResponse]
+            indexResult.messageResult should be("Entity type does not exist")
+          }
+        }
+
+        "POST should retrieve the Collections that matches the search criteria " in {
+         assume(isIndexed == true)
+          val term: TermSearch = new TermSearch("key1","someKey")
+          val listTerms: List[TermSearch] =  List.apply(term)
+
+          Post( s"$pathBase/search", listTerms) ~> openAMSession ~> searchRoute ~> check {
+            val collections = responseAs[List[UBamCollection]]
+            collections should not be empty
+           }
         }
       }
     }

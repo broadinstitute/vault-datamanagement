@@ -4,11 +4,14 @@ import com.mchange.v2.c3p0.ComboPooledDataSource
 import org.broadinstitute.dsde.vault.datamanagement.DataManagementConfig.DatabaseConfig
 import org.broadinstitute.dsde.vault.datamanagement.domain._
 import org.broadinstitute.dsde.vault.datamanagement.model._
+import org.broadinstitute.dsde.vault.datamanagement.searchengine.SearchEngineClient
 
+import scala.collection.mutable.HashMap
 import scala.slick.jdbc.JdbcBackend._
 
 object DataManagementController {
   val dataAccess = new DataAccess(DatabaseConfig.slickDriver)
+  val engineClient = new SearchEngineClient
 
   private val comboPooledDataSource = new ComboPooledDataSource
   comboPooledDataSource.setDriverClass(DatabaseConfig.jdbcDriver)
@@ -111,7 +114,30 @@ object DataManagementController {
         )
     }
   }
-
+  def getUBAMCollectionList : List[UBamCollection] = {
+    database withTransaction {
+      implicit session =>
+        dataAccess.getCollectionList.map(
+          entity => {
+            val members = dataAccess.getMembers(entity.guid.get)
+            val metadata = dataAccess.getMetadata(entity.guid.get)
+            UBamCollection(Option(members), Option(metadata), Option(getProperties(entity)), entity.guid)
+          }
+        )
+    }
+  }
+  def getUBAMCollectionListByIdList(idList: List[String]) : List[UBamCollection] = {
+    database withTransaction {
+      implicit session =>
+        dataAccess.getEntityCollectionListByIdList(idList).map(
+          entity => {
+            val members = dataAccess.getMembers(entity.guid.get)
+            val metadata = dataAccess.getMetadata(entity.guid.get)
+            UBamCollection(Option(members), Option(metadata), Option(getProperties(entity)), entity.guid)
+          }
+        )
+    }
+  }
   // ==================== common utility methods ====================
   private def getAnalysisWithSession(id: String, includeProperties: Boolean)(implicit session: Session): Option[Analysis] = {
     dataAccess.getEntity(id).map(
@@ -159,6 +185,7 @@ object DataManagementController {
     }
   }
 
+
   // ==================== generic entity service methods ====================
   def findDownstream(guid: String) = {
     database withSession {
@@ -188,5 +215,31 @@ object DataManagementController {
     database withSession {
       implicit session => dataAccess.ingestStuff(ingest, createdBy)
     }
+  }
+  // ==================== index service ====================
+
+  def index(entityType : String, version: Option[Int]):IndexResponse ={
+    if(entityType.equals(EntityType.UBAM_COLLECTION.databaseKey)){
+      val collectionMetadata  = getCollectionMetadata
+      return engineClient.indexMetadata(collectionMetadata,EntityType.UBAM_COLLECTION.databaseKey)
+    }
+    return new IndexResponse("Entity type does not exist")
+  }
+
+
+  def getCollectionMetadata():HashMap[String,Map[String, String]] ={
+    val collectionList  = getUBAMCollectionList
+    val metadataToIndex = new  HashMap[String,Map[String, String]]
+    for (collection <- collectionList) {
+      if(!collection.metadata.isEmpty){
+        metadataToIndex += collection.id.get -> collection.metadata.get
+      }
+    }
+    return metadataToIndex
+  }
+
+  def search(terms : List[TermSearch], version: Option[Int]):List[UBamCollection] = {
+    val collectionIdList: List[String] = engineClient.searchIdList(terms, EntityType.UBAM_COLLECTION.databaseKey);
+    return getUBAMCollectionListByIdList(collectionIdList)
   }
 }
