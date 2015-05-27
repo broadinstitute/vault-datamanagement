@@ -1,5 +1,7 @@
 package org.broadinstitute.dsde.vault.datamanagement.services
 
+import javax.ws.rs.Path
+
 import com.wordnik.swagger.annotations._
 import org.broadinstitute.dsde.vault.common.directives.OpenAMDirectives._
 import org.broadinstitute.dsde.vault.common.directives.VersioningDirectives._
@@ -54,10 +56,11 @@ trait GenericService extends HttpService {
     }
   }
 
+  @Path("/{version}/search")
   @ApiOperation(
     value="find IDs of entities of a specified type having a specified metadata attribute value",
     nickname="findEntitiesByTypeAndAttr",
-    httpMethod="GET",
+    httpMethod="POST",
     response=classOf[GenericEntity],
     responseContainer="List")
   @ApiImplicitParams(Array(
@@ -69,8 +72,8 @@ trait GenericService extends HttpService {
     new ApiResponse(code=404, message="Not Found"),
     new ApiResponse(code=500, message="Internal Error")))
   def findEntitiesByTypeAndAttrRoute = {
-    pathVersion(ApiPrefix,DefaultVersion) { version =>
-      get {
+    pathVersion(ApiPrefix, DefaultVersion, "search") { version =>
+      post {
         entity(as[GenericEntityQuery]) { query =>
           respondWithMediaType(`application/json`) {
             complete {
