@@ -22,7 +22,7 @@ trait GenericService extends HttpService {
   private final val ApiVersions = "v1"
   private final val DefaultVersion = 1
 
-  val routes = ingestRoute ~ findEntitiesByTypeAndAttrRoute ~ fetchEntityRoute ~ findUpstreamRoute ~ findDownstreamRoute
+  val routes = ingestRoute ~ findEntitiesByTypeAndAttrRoute ~ findUpstreamRoute ~ findDownstreamRoute ~ fetchEntityRoute
 
   @ApiOperation(
     value="store some entities and relationships",
@@ -123,9 +123,11 @@ trait GenericService extends HttpService {
   def findUpstreamRoute = {
     pathVersion(ApiPrefix,DefaultVersion,Segment) { (version, guid) =>
       get {
-        respondWithMediaType(`application/json`) {
-          complete {
-            DataManagementController.findUpstream(guid).toJson.prettyPrint
+        parameters('up) { up =>
+          respondWithMediaType(`application/json`) {
+            complete {
+              DataManagementController.findUpstream(guid).toJson.prettyPrint
+            }
           }
         }
       }
@@ -149,9 +151,11 @@ trait GenericService extends HttpService {
   def findDownstreamRoute = {
     pathVersion(ApiPrefix,DefaultVersion,Segment) { (version, guid) =>
       get {
-        respondWithMediaType(`application/json`) {
-          complete {
-            DataManagementController.findDownstream(guid).toJson.prettyPrint
+        parameters('down) { down =>
+          respondWithMediaType(`application/json`) {
+            complete {
+              DataManagementController.findDownstream(guid).toJson.prettyPrint
+            }
           }
         }
       }
