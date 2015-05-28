@@ -25,10 +25,6 @@ class DataManagementServiceActor extends HttpServiceActor with ActorLogging {
     def actorRefFactory = context
   }
 
-  val lookupService = new LookupService {
-    def actorRefFactory = context
-  }
-
   val uBAMCollections = new UBamCollectionService {
     def actorRefFactory = context
   }
@@ -41,7 +37,6 @@ class DataManagementServiceActor extends HttpServiceActor with ActorLogging {
   def receive = runRoute(
     unmappedBAM.routes ~
       analysis.routes ~
-      lookupService.routes ~
       uBAMCollections.routes ~
       genericService.routes ~
       swaggerService.routes ~
@@ -50,7 +45,7 @@ class DataManagementServiceActor extends HttpServiceActor with ActorLogging {
 
   val swaggerService = new SwaggerHttpService {
     // All documented API services must be added to these API types
-    override def apiTypes = Seq(typeOf[GenericService], typeOf[UnmappedBAMService], typeOf[AnalysisService], typeOf[LookupService], typeOf[UBamCollectionService])
+    override def apiTypes = Seq(typeOf[GenericService], typeOf[UnmappedBAMService], typeOf[AnalysisService], typeOf[UBamCollectionService])
 
     override def apiVersion = DataManagementConfig.SwaggerConfig.apiVersion
 
