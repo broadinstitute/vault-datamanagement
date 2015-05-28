@@ -109,6 +109,7 @@ trait GenericService extends HttpService {
     }
   }
 
+  @Path("/{version}/{id}?up")
   @ApiOperation(
     value="get entities upstream of a specified entity",
     nickname="findUpstream",
@@ -117,8 +118,7 @@ trait GenericService extends HttpService {
     responseContainer="List")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name="version", required=true, dataType="string", paramType="path", value="API version", allowableValues=ApiVersions),
-    new ApiImplicitParam(name="id", required=true, dataType="string", paramType="path", value="vault ID"),
-    new ApiImplicitParam(name="up", required=true, dataType="string", defaultValue="up", paramType="query", value="marker for upstream query")))
+    new ApiImplicitParam(name="id", required=true, dataType="string", paramType="path", value="vault ID")))
   @ApiResponses(Array(
     new ApiResponse(code=200, message="Successful"),
     new ApiResponse(code=404, message="Not Found"),
@@ -137,6 +137,7 @@ trait GenericService extends HttpService {
     }
   }
 
+  @Path("/{version}/{id}?down")
   @ApiOperation(
     value="get entities downstream of a specified entity",
     nickname="findDownstream",
@@ -145,8 +146,7 @@ trait GenericService extends HttpService {
     responseContainer="List")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name="version", required=true, dataType="string", paramType="path", value="API version", allowableValues=ApiVersions),
-    new ApiImplicitParam(name="id", required=true, dataType="string", paramType="path", value="vault ID"),
-    new ApiImplicitParam(name="down", required=true, dataType="string", defaultValue="down", paramType="query", value="marker for downstream query")))
+    new ApiImplicitParam(name="id", required=true, dataType="string", paramType="path", value="vault ID")))
   @ApiResponses(Array(
     new ApiResponse(code=200, message="Successful"),
     new ApiResponse(code=404, message="Not Found"),
