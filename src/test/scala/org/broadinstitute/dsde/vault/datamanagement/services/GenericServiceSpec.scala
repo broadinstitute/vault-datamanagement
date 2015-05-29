@@ -46,7 +46,7 @@ class GenericServiceSpec extends DataManagementDatabaseFreeSpec with GenericServ
 
         val findEntityPath = s"$pathBase/search"
         "findEntities should retrieve the ID of the bam file" in {
-          Post(findEntityPath,GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr",aValue),GenericAttributeSpec("ownerId","me")),false)) ~>
+          Post(findEntityPath,GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr",aValue),GenericAttributeSpec("ownerId","me")),false,Option.empty)) ~>
             sealRoute(routes) ~> check {
             val files = responseAs[List[GenericEntity]]
             files should have length 1
@@ -56,7 +56,7 @@ class GenericServiceSpec extends DataManagementDatabaseFreeSpec with GenericServ
         }
 
         "findEntities should retrieve the ID and attributes of the bam file" in {
-          Post(findEntityPath,GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr",aValue),GenericAttributeSpec("ownerId","me")),true)) ~>
+          Post(findEntityPath,GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr",aValue),GenericAttributeSpec("ownerId","me")),true,Option.empty)) ~>
                       sealRoute(routes) ~> check {
             val files = responseAs[List[GenericEntity]]
             files should have length 1
@@ -68,7 +68,7 @@ class GenericServiceSpec extends DataManagementDatabaseFreeSpec with GenericServ
         }
 
         "findEntities with bogus attribute value should return NOT FOUND" in {
-          Post(findEntityPath,GenericEntityQuery("file",Seq(GenericAttributeSpec("path","foo")),false)) ~> sealRoute(routes) ~> check {
+          Post(findEntityPath,GenericEntityQuery("file",Seq(GenericAttributeSpec("path","foo")),false,Option.empty)) ~> sealRoute(routes) ~> check {
             val files = responseAs[List[GenericEntity]]
             files should have length 0
           }

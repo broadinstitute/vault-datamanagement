@@ -3,12 +3,10 @@ package org.broadinstitute.dsde.vault.datamanagement.domain
 import java.sql.Timestamp
 import java.util.UUID
 
-import org.broadinstitute.dsde.vault.datamanagement.util.Reflection
 import org.broadinstitute.dsde.vault.datamanagement.domain.RelationKeyValue._
 import org.broadinstitute.dsde.vault.datamanagement.model._
+import org.broadinstitute.dsde.vault.datamanagement.util.Reflection
 
-import scala.collection.mutable
-import scala.slick.collection.heterogenous.Zero
 import scala.slick.driver.JdbcProfile
 
 class DataAccess(val driver: JdbcProfile)
@@ -217,14 +215,40 @@ class DataAccess(val driver: JdbcProfile)
     }
   }
 
-  def findDownstream(guid: String)(implicit session: Session) = {
+  def findDownstream(guid: String)(implicit session: Session): Seq[GenericRelEnt] = {
     val attrMap = Option(kidAttrs(guid).run groupBy {_._1} mapValues {_ map {_._2}})
     for ( entRel <- kids(guid).run )
       yield GenericRelEnt(
               GenericRelationship(entRel._2,getAttrs(entRel._1,attrMap)),
-              GenericEntity(entRel._3.guid.get,entRel._3.entityType,
+              GenericEntity(entRel._3.guid.get,
+                            entRel._3.entityType,
                             GenericSysAttrs(entRel._3.bossID,entRel._3.createdDate.get.getTime,entRel._3.createdBy,entRel._3.modifiedDate map {_.getTime},entRel._3.modifiedBy),
-                            getAttrs(entRel._3.guid.get,attrMap)))
+                            getAttrs(entRel._3.guid.get,attrMap),
+                            Option.empty))
+  }
+
+  private def findDownstreamToDepth(d: Int, guid: String)(implicit session: Session): Option[Seq[GenericRelEnt]] = {
+    d match {
+      case x if x < 1 => Option.empty
+      case x if x == 1 => Some(findDownstream(guid))
+      case x if x > 1 =>
+        val attrMap = Option(kidAttrs(guid).run groupBy {_._1} mapValues {_ map {_._2}})
+        val relEnts = for ( entRel <- kids(guid).run )
+          yield GenericRelEnt(
+            GenericRelationship(entRel._2,getAttrs(entRel._1,attrMap)),
+            GenericEntity(entRel._3.guid.get,
+              entRel._3.entityType,
+              GenericSysAttrs(entRel._3.bossID,entRel._3.createdDate.get.getTime,entRel._3.createdBy,entRel._3.modifiedDate map {_.getTime},entRel._3.modifiedBy),
+              getAttrs(entRel._3.guid.get,attrMap),
+              findDownstreamToDepth(d - 1, entRel._3.guid.get))
+          )
+        // Need to prevent infinite empty lists being returned
+        relEnts match {
+          case Nil => Option.empty
+          case _ => Option(relEnts)
+        }
+      case _ => Option.empty
+    }
   }
 
   // query for upstream entities
@@ -245,14 +269,16 @@ class DataAccess(val driver: JdbcProfile)
         if attr.entityGUID === rel.relationGUID ||
            attr.entityGUID === rel.entity1GUID } yield (attr.entityGUID, attr.name -> attr.value) )
 
-  def findUpstream(guid: String)(implicit session: Session) = {
+  def findUpstream(guid: String)(implicit session: Session): Seq[GenericRelEnt] = {
     val attrMap = Option(rentAttrs(guid).run groupBy {_._1} mapValues {_ map {_._2}})
     for ( entRel <- rents(guid).run )
       yield GenericRelEnt(
               GenericRelationship(entRel._2,getAttrs(entRel._1,attrMap)),
-              GenericEntity(entRel._3.guid.get,entRel._3.entityType,
+              GenericEntity(entRel._3.guid.get,
+                            entRel._3.entityType,
                             GenericSysAttrs(entRel._3.bossID,entRel._3.createdDate.get.getTime,entRel._3.createdBy,entRel._3.modifiedDate map {_.getTime},entRel._3.modifiedBy),
-                            getAttrs(entRel._3.guid.get,attrMap)))
+                            getAttrs(entRel._3.guid.get,attrMap),
+                            Option.empty))
   }
 
   // query for a particular entity
@@ -271,9 +297,11 @@ class DataAccess(val driver: JdbcProfile)
   def fetchEntity(guid: String)(implicit session: Session) = {
     val entities =
       for ( ent <- entityByGUID(guid).run )
-        yield GenericEntity(ent.guid.get,ent.entityType,
+        yield GenericEntity(ent.guid.get,
+                            ent.entityType,
                             GenericSysAttrs(ent.bossID,ent.createdDate.get.getTime,ent.createdBy,ent.modifiedDate map {_.getTime},ent.modifiedBy),
-                            Option(attrsByGUID(guid).run.toMap))
+                            Option(attrsByGUID(guid).run.toMap),
+                            Option.empty)
     assume(entities.size < 2, "query on unique vault ID returned multiple results")
     entities.headOption
   }
@@ -290,10 +318,16 @@ class DataAccess(val driver: JdbcProfile)
         val attributeQuery = entityQuery innerJoin attributes on(_.guid === _.entityGUID) map(_._2)
         Option(attributeQuery.run groupBy {_.entityGUID} mapValues(_ map { attr => (attr.name,attr.value) }))
       }
+    val depth: Int = query.depth match {
+      case Some(x) => x
+      case None => 0
+    }
     for ( ent <- entityQuery.run )
         yield GenericEntity(ent.guid.get,ent.entityType,
                             GenericSysAttrs(ent.bossID,ent.createdDate.get.getTime,ent.createdBy,ent.modifiedDate map {_.getTime},ent.modifiedBy),
-                            getAttrs(ent.guid.get,attrMap))
+                            getAttrs(ent.guid.get,attrMap),
+                            findDownstreamToDepth(depth, ent.guid.get)
+        )
   }
 
   // generic ingestification
