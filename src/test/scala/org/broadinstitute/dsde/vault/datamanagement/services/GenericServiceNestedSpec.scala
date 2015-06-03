@@ -109,9 +109,9 @@ class GenericServiceNestedSpec extends DataManagementDatabaseFreeSpec with Gener
             roots should have length 1
             val root = roots.head
             root.relEnts.get should have length 2
-            val aliquot1 = root.relEnts.get.head.entity
+            val aliquot1 = root.relEnts.get.filter(_.entity.guid == guids(1)).head.entity
             aliquot1.relEnts.get should have length 2
-            val aliquot2 = root.relEnts.get(1).entity
+            val aliquot2 = root.relEnts.get.filter(_.entity.guid == guids(2)).head.entity
             aliquot2.relEnts.get should have length 1
 
             // The depth parameter should limit further relEnts from being populated
@@ -133,10 +133,10 @@ class GenericServiceNestedSpec extends DataManagementDatabaseFreeSpec with Gener
             roots should have length 1
             val root = roots.head
             root.relEnts.get should have length 2
-            val aliquot1 = root.relEnts.get.head.entity
+            val aliquot1 = root.relEnts.get.filter(_.entity.guid == guids(1)).head.entity
             aliquot1.relEnts.get should have length 2
 
-            val aliquot3 = aliquot1.relEnts.get.head.entity
+            val aliquot3 = aliquot1.relEnts.get.filter(_.entity.guid == guids(3)).head.entity
             aliquot3.relEnts.get should have length 1
 
             // The depth parameter should limit further relEnts from being populated
@@ -152,10 +152,10 @@ class GenericServiceNestedSpec extends DataManagementDatabaseFreeSpec with Gener
             roots should have length 1
             val root = roots.head
             root.relEnts.get should have length 2
-            val aliquot1 = root.relEnts.get.head.entity
+            val aliquot1 = root.relEnts.get.filter(_.entity.guid == guids(1)).head.entity
             aliquot1.relEnts.get should have length 2
 
-            val aliquot3 = aliquot1.relEnts.get.head.entity
+            val aliquot3 = aliquot1.relEnts.get.filter(_.entity.guid == guids(3)).head.entity
             aliquot3.relEnts.get should have length 1
 
             val aliquot6 = aliquot3.relEnts.get.head.entity
@@ -171,8 +171,8 @@ class GenericServiceNestedSpec extends DataManagementDatabaseFreeSpec with Gener
           Post(findEntityPath,GenericEntityQuery("rootSample", Seq(GenericAttributeSpec("id", aValue), GenericAttributeSpec("ownerId","me")),false, Option(10))) ~>
             sealRoute(routes) ~> check {
             val roots = responseAs[List[GenericEntity]]
-            val aliquot1 = roots.head.relEnts.get.head.entity
-            val aliquot3 = aliquot1.relEnts.get.head.entity
+            val aliquot1 = roots.head.relEnts.get.filter(_.entity.guid == guids(1)).head.entity
+            val aliquot3 = aliquot1.relEnts.get.filter(_.entity.guid == guids(3)).head.entity
             val aliquot6 = aliquot3.relEnts.get.head.entity
             val aliquot7 = aliquot6.relEnts.get.head.entity
             // The depth parameter should limit further relEnts from being populated

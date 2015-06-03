@@ -227,30 +227,6 @@ class DataAccess(val driver: JdbcProfile)
                             Option.empty))
   }
 
-  private def findDownstreamToDepth(d: Int, guid: String)(implicit session: Session): Option[Seq[GenericRelEnt]] = {
-    d match {
-      case x if x < 1 => Option.empty
-      case x if x == 1 => Some(findDownstream(guid))
-      case x if x > 1 =>
-        val attrMap = Option(kidAttrs(guid).run groupBy {_._1} mapValues {_ map {_._2}})
-        val relEnts = for ( entRel <- kids(guid).run )
-          yield GenericRelEnt(
-            GenericRelationship(entRel._2,getAttrs(entRel._1,attrMap)),
-            GenericEntity(entRel._3.guid.get,
-              entRel._3.entityType,
-              GenericSysAttrs(entRel._3.bossID,entRel._3.createdDate.get.getTime,entRel._3.createdBy,entRel._3.modifiedDate map {_.getTime},entRel._3.modifiedBy),
-              getAttrs(entRel._3.guid.get,attrMap),
-              findDownstreamToDepth(d - 1, entRel._3.guid.get))
-          )
-        // Need to prevent infinite empty lists being returned
-        relEnts match {
-          case Nil => Option.empty
-          case _ => Option(relEnts)
-        }
-      case _ => Option.empty
-    }
-  }
-
   // query for upstream entities
   private val rents = Compiled(
     (guid: Column[String]) =>
@@ -307,6 +283,27 @@ class DataAccess(val driver: JdbcProfile)
   }
 
   // generic query
+  private def findLevel( parentEntQ: Query[Entities,Entity,Seq], depth: Int )(implicit session: Session): Map[String,Seq[GenericRelEnt]] = {
+    val relQ = parentEntQ innerJoin relations on(_.guid === _.entity1GUID) map(_._2)
+    val relEntQ = relQ innerJoin entities on(_.relationGUID === _.guid) innerJoin entities on(_._1.entity2GUID === _.guid)
+    val kidsMap =
+      if ( depth <= 0 ) Map.empty[String,Seq[GenericRelEnt]]
+      else findLevel(relEntQ map(_._2),depth-1)
+    val attrQ = relQ innerJoin attributes on( { case (rel,attr) => { rel.relationGUID === attr.entityGUID || rel.entity2GUID === attr.entityGUID } } ) map(_._2)
+    val attrMap = Option(attrQ.run groupBy {_.entityGUID} mapValues(_ map { attr => (attr.name,attr.value) }))
+    val genRelEnts =
+      for ( ((rel,rEnt),ent) <- relEntQ.run )
+        yield (rel.entity1GUID,
+               GenericRelEnt(
+                GenericRelationship(rEnt.entityType,getAttrs(rel.relationGUID,attrMap)),
+                GenericEntity(rel.entity2GUID,
+                              ent.entityType,
+                              GenericSysAttrs(ent.bossID,ent.createdDate.get.getTime,ent.createdBy,ent.modifiedDate map {_.getTime},ent.modifiedBy),
+                              getAttrs(rel.entity2GUID,attrMap),
+                              kidsMap.get(rel.entity2GUID))))
+    genRelEnts groupBy {_._1} mapValues(_ map {_._2})
+  }
+
   def findEntities(query: GenericEntityQuery)(implicit session: Session) = {
     val bareEntityQuery = entities.filter(_.entityType === query.entityType)
     val entityQuery = query.attrSpec.foldLeft(bareEntityQuery)({(entQ,spec) => {
@@ -318,16 +315,17 @@ class DataAccess(val driver: JdbcProfile)
         val attributeQuery = entityQuery innerJoin attributes on(_.guid === _.entityGUID) map(_._2)
         Option(attributeQuery.run groupBy {_.entityGUID} mapValues(_ map { attr => (attr.name,attr.value) }))
       }
-    val depth: Int = query.depth match {
-      case Some(x) => x
-      case None => 0
-    }
+
+    val depth = query.depth.getOrElse(0)
+    val kidsMap =
+      if ( depth <= 0 ) Map.empty[String,Seq[GenericRelEnt]]
+      else findLevel(entityQuery,depth-1)
+
     for ( ent <- entityQuery.run )
         yield GenericEntity(ent.guid.get,ent.entityType,
                             GenericSysAttrs(ent.bossID,ent.createdDate.get.getTime,ent.createdBy,ent.modifiedDate map {_.getTime},ent.modifiedBy),
                             getAttrs(ent.guid.get,attrMap),
-                            findDownstreamToDepth(depth, ent.guid.get)
-        )
+                            kidsMap.get(ent.guid.get))
   }
 
   // generic ingestification
