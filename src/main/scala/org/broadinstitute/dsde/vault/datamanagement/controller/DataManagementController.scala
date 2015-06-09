@@ -136,21 +136,6 @@ object DataManagementController {
   private def getProperties(entity: Entity, includeProperties: Boolean): Option[Map[String, String]] =
     if (includeProperties) Option(getProperties(entity)) else None
 
-  // ==================== lookup service ====================
-  def lookupEntityByEndpointAttribute
-  (endpoint: String, attributeName: String, attributeValue: String): Option[EntitySearchResult] = {
-    database withTransaction {
-      implicit session =>
-        EntityType.TYPES.find(_.endpoint == endpoint) match {
-          case Some(entityType) =>
-            dataAccess
-              .lookupEntityByTypeAttribute(entityType.databaseKey, attributeName, attributeValue)
-              .map(entity => EntitySearchResult(entity.guid.get, entityType.endpoint))
-          case None => None
-        }
-    }
-  }
-
   // ==================== test methods ====================
   def getEntity(id: String) = {
     database withTransaction {
