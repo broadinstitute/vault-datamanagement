@@ -5,7 +5,7 @@ import org.broadinstitute.dsde.vault.datamanagement.model.GenericEntityIngest
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericRelationshipIngest
 import org.broadinstitute.dsde.vault.datamanagement.model.GenericIngest
 
-import spray.json.DefaultJsonProtocol
+import spray.json.{RootJsonFormat, DefaultJsonProtocol}
 
 object JsonImplicits extends DefaultJsonProtocol {
   // via https://github.com/jacobus/s4/blob/8dc0fbb04c788c892cb93975cf12f277006b0095/src/main/scala/s4/rest/S4Service.scala
@@ -14,12 +14,18 @@ object JsonImplicits extends DefaultJsonProtocol {
   implicit val impBAMCollection = jsonFormat4(UBamCollection)
   implicit val impEntitySearchResult = jsonFormat2(EntitySearchResult)
   implicit val impGenericSysAttrs = jsonFormat5(GenericSysAttrs)
-  implicit val impGenericEntity = jsonFormat4(GenericEntity)
+  /*
+   * See https://github.com/spray/spray-json#jsonformats-for-recursive-types
+   * for dealing with entities that reference one another. In this case, we
+   * also need to wrap it in a RootJsonFormat to avoid runtime errors in the
+   * service classes.
+   */
+  implicit val impGenericEntity: RootJsonFormat[GenericEntity] = rootFormat(lazyFormat(jsonFormat(GenericEntity, "guid", "entityType", "sysAttrs", "attrs", "relatedEntities")))
   implicit val impGenericRelationship = jsonFormat2(GenericRelationship)
   implicit val impGenericRelEnt = jsonFormat2(GenericRelEnt)
   implicit val impGenericEntityIngest = jsonFormat3(GenericEntityIngest)
   implicit val impGenericRelationshipIngest = jsonFormat4(GenericRelationshipIngest)
   implicit val impGenericIngest = jsonFormat2(GenericIngest)
   implicit val impGenericAttributeSpec = jsonFormat2(GenericAttributeSpec)
-  implicit val impGenericQuery = jsonFormat3(GenericEntityQuery)
+  implicit val impGenericQuery = jsonFormat4(GenericEntityQuery)
 }

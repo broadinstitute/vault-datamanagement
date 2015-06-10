@@ -54,7 +54,7 @@ class DataManagementControllerSpec extends DataManagementDatabaseFreeSpec {
           guids should have length 3
 
           // list the IDs of "unmappedBAM" entities having a "queryAttr" of someValue
-          val files = da.findEntities(GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr",someValue)),false))
+          val files = da.findEntities(GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr",someValue)),false,Option.empty))
           files should have length 1
           val uBAM = files(0)
           uBAM.guid shouldBe guids(0)
@@ -127,7 +127,7 @@ class DataManagementControllerSpec extends DataManagementDatabaseFreeSpec {
           guids should have length 3
 
           // list the IDs of "unmappedBAM" entities having a "queryAttr" of someValue
-          val files = da.findEntities(GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr",someValue)),true))
+          val files = da.findEntities(GenericEntityQuery("unmappedBAM",Seq(GenericAttributeSpec("queryAttr",someValue)),true,Option.empty))
           files should have length 1
           val uBAM = files(0)
           uBAM.entityType shouldBe "unmappedBAM"

@@ -1,6 +1,7 @@
 package org.broadinstitute.dsde.vault.datamanagement.model
 
 import com.wordnik.swagger.annotations.{ApiModel, ApiModelProperty}
+
 import scala.annotation.meta.field
 
 @ApiModel("system-generated entity attributes")
@@ -25,7 +26,9 @@ case class GenericEntity(
   @(ApiModelProperty@field)("some system-generated 'when's and 'who's")
   sysAttrs: GenericSysAttrs,
   @(ApiModelProperty@field)("an open set of metadata attributes of the entity")
-  attrs: Option[Map[String,String]] )
+  attrs: Option[Map[String,String]],
+  @(ApiModelProperty@field)("an optional set of related entities")
+  relEnts: Option[Seq[GenericRelEnt]])
 
 @ApiModel("a directed relationship between two entities")
 case class GenericRelationship(
@@ -83,4 +86,6 @@ case class GenericEntityQuery(
   @(ApiModelProperty@field)("optional metadata attribute spec")
   attrSpec: Seq[GenericAttributeSpec],
   @(ApiModelProperty@field)("return metadata attributes, or skip it")
-  expandAttrs: Boolean )
+  expandAttrs: Boolean,
+  @(ApiModelProperty@field)("optional value to specify the depth of entity relationships to include")
+  depth: Option[Int] )
